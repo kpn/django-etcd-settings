@@ -29,7 +29,7 @@ def run_tests():
         from django.test.simple import DjangoTestSuiteRunner as Runner
 
     test_runner = Runner(verbosity=1)
-    return test_runner.run_tests(['etcd_settings'])
+    return test_runner.run_tests(['tests'])
 
 
 def main():
