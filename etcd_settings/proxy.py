@@ -43,9 +43,9 @@ class EtcdSettingsProxy(object):
             dj_value_exists = False
             dj_value = None
         try:
-            value = getattr(self._env_defaults, attr)
+            value = self._env_defaults[attr]
             value_exists = True
-        except AttributeError:
+        except KeyError:
             value_exists = dj_value_exists
             value = dj_value
 
