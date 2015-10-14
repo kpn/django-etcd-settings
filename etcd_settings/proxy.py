@@ -5,27 +5,6 @@ from .utils import dict_rec_update
 
 
 class EtcdSettingsProxy(object):
-    """
-    Config Dependencies:
-    * ETCD_DETAILS: a dict with 'host', 'port' and 'protocol'. If this setting
-        is None, this app will start with no errors and etcd_settings.settings
-        will resolve to django.config.settings
-    * ENV: A string with the name of the environment in which the code is
-        running. This will be used for accessing the env_defaults in
-        a directory with that name. i.e. 'test', 'staging', 'prod'...
-    * REQUEST_GETTER_MODULE: path to a module implemented a function
-        'get_current_request()' which accesses the HTTP request object being
-        handled. Ensuring access to this value can be implemented with, for
-        instance, a middleware.  i.e. 'middleware.thread_local'
-        This settings is only used to allow config overwrites on runtime based
-        on predifined config_sets. In case you don't want to use this
-        functionality, just set this settings to None
-    * ETCD_CONFIG_PREFIX: A string to be used as base path for all
-        configuration managed by this app.
-        i.e. '/config/api' will result in '/config/api/<ENV>' and
-        '/config/api/extensions/' to be used for environment defaults and
-        config_sets respectively
-    """
 
     def __init__(self):
         self._env = django_settings.ENV

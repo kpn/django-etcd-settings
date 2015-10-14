@@ -31,7 +31,7 @@ This Django application uses the following configuration keys:
 
 * `ETCD_DETAILS`: a dict with 'host', 'port' and 'protocol'. If this setting
     is None, this app will start with no errors and etcd_settings.settings
-    will resolve to django.config.settings
+    will resolve to django.conf.settings
     i.e. `ETCD_DETAILS = dict(host='localhost', port=4000, protocol='http')`
 
 * `ETCD_CONFIG_PREFIX`: A string to be used as base path for all
@@ -58,7 +58,7 @@ Then, add `etcd_settings` to the list of `INSTALLED_APPS` before any other that
 requires dynamic settings.
 
 From your code, just do `from etcd_settings import settings` instead of `from
-django.config import settings`.
+django.conf import settings`.
 
 ## TODO
 
