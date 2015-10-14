@@ -1,6 +1,6 @@
 from importlib import import_module
 from django.conf import settings as django_settings
-from .mgr import EtcdConfigManager
+from .manager import EtcdConfigManager
 from .utils import dict_rec_update
 
 

@@ -1,7 +1,7 @@
 import datetime
 from mock import MagicMock
 from etcd import EtcdResult
-from .mgr import EtcdConfigManager
+from .manager import EtcdConfigManager
 from django.test import TestCase
 
 
