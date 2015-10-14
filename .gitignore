@@ -1,0 +1,18 @@
+syntax: glob
+
+# OS files
+*~
+*.DS_Store
+
+# IDE files
+.idea/
+*.iml
+*.sw?
+
+# Compiled source
+*.pyc
+
+params.py
+
+# Other
+/venv
