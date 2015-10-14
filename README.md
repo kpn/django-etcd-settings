@@ -54,6 +54,12 @@ This Django application uses the following configuration keys:
     functionality, just set this settings to None
     i.e. 'middleware.thread_local'
 
+Then, add `etcd_settings` to the list of `INSTALLED_APPS` before any other that
+requires dynamic settings.
+
+From your code, just do `from etcd_settings import settings` instead of `from
+django.config import settings`.
+
 ## TODO
 
 * Extending the unit tests in order to cover `etcd_settings.proxy`
