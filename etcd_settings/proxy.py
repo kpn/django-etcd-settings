@@ -1,7 +1,7 @@
 from importlib import import_module
 from django.conf import settings as django_settings
 from .manager import EtcdConfigManager
-from .utils import dict_rec_update
+from .utils import attrs_to_dir, dict_rec_update
 
 
 class EtcdSettingsProxy(object):
@@ -62,15 +62,9 @@ class EtcdSettingsProxy(object):
             raise AttributeError(attr)
 
     def as_dict(self):
-        """Return a dict with all settings, overridden if need be"""
-
-        env_defaults = self._env_defaults
-        items = {}
-        for key in dir(django_settings):
-            if key.isupper():
-                items[key] = getattr(self, key)
-        env_defaults.update(items)
-        return env_defaults
+        items = attrs_to_dir(django_settings)
+        items.update(self._env_defaults)
+        return items
 
 
 proxy = EtcdSettingsProxy()
