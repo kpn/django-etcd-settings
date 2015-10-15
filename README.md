@@ -51,14 +51,12 @@ This Django application uses the following configuration keys:
     ETCD in a directory with that name
     i.e. 'test', 'staging', 'prod'...
 
-* `DJES_REQUEST_GETTER_MODULE`: path to a module implemented a function
-    'get_current_request()' which accesses the HTTP request object being
-    handled. Ensuring access to this value can be implemented with, for
-    instance, a middleware.
-    This settings is only used to allow config overwrites on runtime based
-    on predifined config_sets. In case you don't want to use this
-    functionality, just set this settings to None
-    i.e. 'middleware.thread_local'
+* `DJES_REQUEST_GETTER`: path to a function which accesses the HTTP request
+    object being handled. Ensuring access to this value can be implemented
+    with, for instance, a middleware.  This settings is only used to allow
+    config overwrites on runtime based on predifined config_sets. In case you
+    don't want to use this functionality, just set this setting to None
+    i.e. 'middleware.thread_local.get_current_request'
 
 
 Then, add `etcd_settings` to the list of `INSTALLED_APPS` before any other that

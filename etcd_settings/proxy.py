@@ -1,3 +1,4 @@
+import re
 from importlib import import_module
 from django.conf import settings as django_settings
 from .manager import EtcdConfigManager
@@ -10,8 +11,7 @@ class EtcdSettingsProxy(object):
         env = django_settings.DJES_ENV
         dev_params = django_settings.DJES_DEV_PARAMS
         etcd_details = django_settings.DJES_ETCD_DETAILS
-        self._request_getter_module = \
-            django_settings.DJES_REQUEST_GETTER_MODULE
+        self._init_req_getter(django_settings.DJES_REQUEST_GETTER)
         if etcd_details is not None:
             self._etcd_mgr = EtcdConfigManager(
                 dev_params, **etcd_details)
@@ -22,12 +22,19 @@ class EtcdSettingsProxy(object):
             self._config_sets = dict()
             self._env_defaults = EtcdConfigManager.get_dev_params(dev_params)
 
+    def _init_req_getter(self, s):
+        if s is not None:
+            r = re.compile('(?P<module>.*)\.(?P<f>[\w_]+)')
+            m = re.match(r, s)
+            mod_s = m.group('module')
+            fun_s = m.group('f')
+            mod = import_module(mod_s)
+            self._req_getter = getattr(mod, fun_s)
+
     def _parse_req_config_sets(self):
         sets = []
-        if self._request_getter_module is not None:
-            req_getter = import_module(
-                django_settings.REQUEST_GETTER_MODULE).get_current_request
-            request = req_getter()
+        if self._req_getter is not None:
+            request = self._req_getter()
             if request and getattr(request, "META", None):
                 sets = request.META.get('HTTP_X_DYNAMIC_SETTING', '').split()
         return sets
