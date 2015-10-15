@@ -8,8 +8,8 @@ from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
 
 class EtcdConfigManager():
 
-    def __init__(self, prefix, protocol='http',
-                 host='localhost', port=2379, dev_params=None):
+    def __init__(self, dev_params=None, prefix='config', protocol='http',
+                 host='localhost', port=2379):
         self._client = Client(
             host=host, port=port, protocol=protocol, allow_redirect=True)
         self._base_config_path = prefix
@@ -20,7 +20,7 @@ class EtcdConfigManager():
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
 
-    def _env_defaults_path(self, env='test_exa'):
+    def _env_defaults_path(self, env='test'):
         return "{}/{}".format(self._base_config_path, env)
 
     def _config_set_path(self, set_name):
@@ -40,12 +40,6 @@ class EtcdConfigManager():
     def _decode_config_value(self, val):
         return json.loads(val, object_hook=custom_json_decoder_hook)
 
-    def _add_dev_params(self, d):
-        if self._dev_params:
-            params = attrs_to_dir(import_module(self._dev_params))
-            d.update(params)
-        return d
-
     def _process_response_set(self, rset, env_defaults=True):
         d = {}
         for leaf in rset.leaves:
@@ -59,12 +53,19 @@ class EtcdConfigManager():
                 d[config_set][key] = value
         return d
 
+    @staticmethod
+    def get_dev_params(mod):
+        params = {}
+        if mod:
+            params = attrs_to_dir(import_module(mod))
+        return params
+
     def get_env_defaults(self, env='test_exa'):
         res = self._client.read(
             self._env_defaults_path(env),
             recursive=True)
         conf = self._process_response_set(res)
-        self._add_dev_params(conf)
+        conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
         return conf
 
     def get_config_sets(self):
@@ -82,7 +83,7 @@ class EtcdConfigManager():
                 recursive=True):
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event))
-            self._add_dev_params(conf)
+            conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
 
     @threaded
     def monitor_config_sets(self, conf={}):

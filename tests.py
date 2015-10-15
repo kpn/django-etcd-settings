@@ -14,11 +14,12 @@ def run_tests():
         },
         MIDDLEWARE_CLASSES=global_settings.MIDDLEWARE_CLASSES,
         INSTALLED_APPS=['etcd_settings'],
-        ENV='dev',
-        REQUEST_GETTER_MODULE=None,
-        ETCD_CONFIG_PREFIX='/config/my-django-app',
-        # ETCD_DETAILS=dict(host='localhost', port=4000, protocol='http')
-        ETCD_DETAILS=None
+        DJES_DEV_PARAMS=None,
+        DJES_REQUEST_GETTER_MODULE=None,
+        DJES_ENV='dev',
+        DJES_ETCD_DETAILS=None
+        # DJES_ETCD_DETAILS=dict(host='localhost', port=4000, protocol='http',
+        #                        prefix='/config/my-django-app')
     )
     if hasattr(django, 'setup'):
         django.setup()

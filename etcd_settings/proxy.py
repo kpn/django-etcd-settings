@@ -7,22 +7,24 @@ from .utils import attrs_to_dir, dict_rec_update
 class EtcdSettingsProxy(object):
 
     def __init__(self):
-        self._env = django_settings.ENV
-        self._etcd_details = django_settings.ETCD_DETAILS
-        self._prefix = django_settings.ETCD_CONFIG_PREFIX
-        if self._etcd_details is not None:
+        env = django_settings.DJES_ENV
+        dev_params = django_settings.DJES_DEV_PARAMS
+        etcd_details = django_settings.DJES_ETCD_DETAILS
+        self._request_getter_module = \
+            django_settings.DJES_REQUEST_GETTER_MODULE
+        if etcd_details is not None:
             self._etcd_mgr = EtcdConfigManager(
-                self._prefix, **self._etcd_details)
+                dev_params, **etcd_details)
             self._config_sets = self._etcd_mgr.get_config_sets()
-            self._env_defaults = self._etcd_mgr.get_env_defaults(self._env)
+            self._env_defaults = self._etcd_mgr.get_env_defaults(env)
         else:
             self._etcd_mgr = None
             self._config_sets = dict()
-            self._env_defaults = dict()
+            self._env_defaults = EtcdConfigManager.get_dev_params(dev_params)
 
     def _parse_req_config_sets(self):
         sets = []
-        if getattr(django_settings, 'REQUEST_GETTER_MODULE', None) is not None:
+        if self._request_getter_module is not None:
             req_getter = import_module(
                 django_settings.REQUEST_GETTER_MODULE).get_current_request
             request = req_getter()

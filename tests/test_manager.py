@@ -74,7 +74,8 @@ class TestEtcdConfigManager(TestCase):
 
     def setUp(self):
         self.mgr = EtcdConfigManager(
-            'prefix', protocol='foo', host='foo', port=0)
+            dev_params=None, prefix='prefix',
+            protocol='foo', host='foo', port=0)
 
     def test_encode_config_key(self):
         self.assertEqual(
