@@ -1,16 +1,19 @@
 import re
-from etcd import Client
 import json
-from .utils import threaded, CustomJSONEncoder, custom_json_decoder_hook
+from etcd import Client
+from importlib import import_module
+from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
+                    attrs_to_dir)
 
 
 class EtcdConfigManager():
 
     def __init__(self, prefix, protocol='http',
-                 host='localhost', port=2379):
+                 host='localhost', port=2379, dev_params=None):
         self._client = Client(
             host=host, port=port, protocol=protocol, allow_redirect=True)
         self._base_config_path = prefix
+        self._dev_params = dev_params
         self._base_config_set_path = "{}/extensions"\
             .format(self._base_config_path)
         r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\.]+))/(?P<key>.+)$'
@@ -37,6 +40,12 @@ class EtcdConfigManager():
     def _decode_config_value(self, val):
         return json.loads(val, object_hook=custom_json_decoder_hook)
 
+    def _add_dev_params(self, d):
+        if self._dev_params:
+            params = attrs_to_dir(import_module(self._dev_params))
+            d.update(params)
+        return d
+
     def _process_response_set(self, rset, env_defaults=True):
         d = {}
         for leaf in rset.leaves:
@@ -55,6 +64,7 @@ class EtcdConfigManager():
             self._env_defaults_path(env),
             recursive=True)
         conf = self._process_response_set(res)
+        self._add_dev_params(conf)
         return conf
 
     def get_config_sets(self):
@@ -72,6 +82,7 @@ class EtcdConfigManager():
                 recursive=True):
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event))
+            self._add_dev_params(conf)
 
     @threaded
     def monitor_config_sets(self, conf={}):
