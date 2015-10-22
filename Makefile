@@ -17,6 +17,9 @@ venv: clean
 test: venv
 	$(PYTHON) tests.py
 
+shell: venv
+	$(CURDIR)/venv/bin/bpython
+
 upload: venv
 ifdef UPLOAD_TARGET
 	$(PYTHON) setup.py register -r $(UPLOAD_TARGET)
