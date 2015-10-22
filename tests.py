@@ -17,7 +17,8 @@ def run_tests():
         DJES_DEV_PARAMS=None,
         DJES_REQUEST_GETTER=None,
         DJES_ENV='dev',
-        DJES_ETCD_DETAILS=None
+        DJES_ETCD_DETAILS=None,
+        DJES_WSGI_FILE=None
         # DJES_ETCD_DETAILS=dict(host='localhost', port=4000, protocol='http',
         #                        prefix='/config/my-django-app')
     )

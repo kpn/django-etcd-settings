@@ -1,7 +1,8 @@
 import re
 import json
-from etcd import Client
+from os import utime
 from importlib import import_module
+from etcd import Client
 from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
                     attrs_to_dir)
 
@@ -76,7 +77,7 @@ class EtcdConfigManager():
         return conf
 
     @threaded
-    def monitor_env_defaults(self, env='test_exa', conf={}):
+    def monitor_env_defaults(self, env='test_exa', conf={}, wsgi_file=None):
         for event in self._client.eternal_watch(
                 self._env_defaults_path(env),
                 index=self._etcd_index,
@@ -84,6 +85,9 @@ class EtcdConfigManager():
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event))
             conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
+            if wsgi_file:
+                with open(wsgi_file, 'a'):
+                    utime(wsgi_file, None)
 
     @threaded
     def monitor_config_sets(self, conf={}):
