@@ -12,6 +12,7 @@ class EtcdSettingsProxy(object):
         dev_params = django_settings.DJES_DEV_PARAMS
         etcd_details = django_settings.DJES_ETCD_DETAILS
         self._init_req_getter(django_settings.DJES_REQUEST_GETTER)
+        self._wsgi_file = django_settings.DJES_WSGI_FILE
         if etcd_details is not None:
             self._etcd_mgr = EtcdConfigManager(
                 dev_params, **etcd_details)
@@ -41,8 +42,11 @@ class EtcdSettingsProxy(object):
 
     def start_monitors(self):
         if self._etcd_mgr is not None:
-            self._env_defaults = self.monitor_env_defaults(self.env)
-            self._config_sets = self.monitor_config_sets()
+            self._env_defaults = self._etcd_mgr.monitor_env_defaults(
+                env=self.env, conf=self._env_defaults,
+                wsgi_file=self._wsgi_file)
+            self._config_sets = self._etcd_mgr.monitor_config_sets(
+                conf=self._config_sets)
 
     def __getattr__(self, attr):
         try:
