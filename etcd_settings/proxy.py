@@ -9,11 +9,13 @@ from .utils import attrs_to_dir, dict_rec_update, find_project_root
 class EtcdSettingsProxy(object):
 
     def __init__(self):
-        env = django_settings.DJES_ENV
-        dev_params = django_settings.DJES_DEV_PARAMS
-        etcd_details = django_settings.DJES_ETCD_DETAILS
-        self._init_req_getter(django_settings.DJES_REQUEST_GETTER)
-        self._locate_wsgi_file(django_settings.DJES_WSGI_FILE)
+        env = getattr(django_settings, 'DJES_ENV', None)
+        dev_params = getattr(django_settings, 'DJES_DEV_PARAMS', None)
+        etcd_details = getattr(django_settings, 'DJES_ETCD_DETAILS', None)
+        self._init_req_getter(
+            getattr(django_settings, 'DJES_REQUEST_GETTER', None))
+        self._locate_wsgi_file(
+            getattr(django_settings, 'DJES_WSGI_FILE', None))
         if etcd_details is not None:
             self._etcd_mgr = EtcdConfigManager(
                 dev_params, **etcd_details)
