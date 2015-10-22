@@ -1,18 +1,21 @@
 import re
+import os
 from importlib import import_module
 from django.conf import settings as django_settings
 from .manager import EtcdConfigManager
-from .utils import attrs_to_dir, dict_rec_update
+from .utils import attrs_to_dir, dict_rec_update, find_project_root
 
 
 class EtcdSettingsProxy(object):
 
     def __init__(self):
-        env = django_settings.DJES_ENV
-        dev_params = django_settings.DJES_DEV_PARAMS
-        etcd_details = django_settings.DJES_ETCD_DETAILS
-        self._init_req_getter(django_settings.DJES_REQUEST_GETTER)
-        self._wsgi_file = django_settings.DJES_WSGI_FILE
+        env = getattr(django_settings, 'DJES_ENV', None)
+        dev_params = getattr(django_settings, 'DJES_DEV_PARAMS', None)
+        etcd_details = getattr(django_settings, 'DJES_ETCD_DETAILS', None)
+        self._init_req_getter(
+            getattr(django_settings, 'DJES_REQUEST_GETTER', None))
+        self._locate_wsgi_file(
+            getattr(django_settings, 'DJES_WSGI_FILE', None))
         if etcd_details is not None:
             self._etcd_mgr = EtcdConfigManager(
                 dev_params, **etcd_details)
@@ -22,6 +25,16 @@ class EtcdSettingsProxy(object):
             self._etcd_mgr = None
             self._config_sets = dict()
             self._env_defaults = EtcdConfigManager.get_dev_params(dev_params)
+
+    def _locate_wsgi_file(self, wsgi_file):
+        if wsgi_file is None:
+            self._wsgi_file = None
+        elif wsgi_file.startswith(os.path.sep):
+            self._wsgi_file = wsgi_file
+        else:
+            self._wsgi_file = os.path.join(
+                find_project_root('manage.py'),
+                wsgi_file)
 
     def _init_req_getter(self, s):
         if s is not None:
