@@ -1,6 +1,7 @@
 import sys
 import json
 import datetime
+import os
 from dateutil.parser import parse as parse_date
 from collections import Mapping
 from threading import Thread
@@ -86,3 +87,14 @@ def custom_json_decoder_hook(obj):
         return CustomJSONEncoder.DECODERS[ct](value)
     else:
         return obj
+
+
+def find_project_root(root_indicator='manage.py', current=os.getcwd()):
+    parent = os.path.dirname(current)
+    if root_indicator in os.listdir(current):
+        return current
+    elif current == parent:
+        # We are at '/' already!
+        raise IOError('Not found: {}'.format(root_indicator))
+    else:
+        return find_project_root(root_indicator, parent)

@@ -58,11 +58,13 @@ This Django application uses the following configuration keys:
     don't want to use this functionality, just set this setting to None
     i.e. 'middleware.thread_local.get_current_request'
 
-* `DJES_WSGI_FILE`: absolute file path to the `wsgi.py` file for the django
+* `DJES_WSGI_FILE`: path to the `wsgi.py` file for the django
     project. If not None, the monitoring of environment configuration will
     perform a `touch` of the file everytime the env_defaults are updated, so
     that all processes consuming settings from `django.conf` can consume the
     latest settings available as well
+    The path can be absolute or relative to the 'manage.py' file.
+    i.e. /project/src/wsgi.py, wsgi.py
 
 Then, add `etcd_settings` to the list of `INSTALLED_APPS` before any other that
 requires dynamic settings.
