@@ -3,7 +3,8 @@ import os
 from importlib import import_module
 from django.conf import settings as django_settings
 from .manager import EtcdConfigManager
-from .utils import attrs_to_dir, dict_rec_update, find_project_root
+from .utils import (
+    attrs_to_dir, dict_rec_update, copy_if_mutable, find_project_root)
 
 
 class EtcdSettingsProxy(object):
@@ -78,6 +79,7 @@ class EtcdSettingsProxy(object):
         for override_set in self._parse_req_config_sets():
             new_value = self._config_sets.get(override_set, {}).get(attr)
             if new_value:
+                value = copy_if_mutable(value)
                 if isinstance(value, dict) and isinstance(new_value, dict):
                     dict_rec_update(value, new_value)
                 else:

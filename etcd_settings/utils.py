@@ -2,6 +2,7 @@ import sys
 import json
 import datetime
 import os
+import copy
 from dateutil.parser import parse as parse_date
 from collections import Mapping
 from threading import Thread
@@ -98,3 +99,11 @@ def find_project_root(root_indicator='manage.py', current=os.getcwd()):
         raise IOError('Not found: {}'.format(root_indicator))
     else:
         return find_project_root(root_indicator, parent)
+
+def copy_if_mutable(value):
+    """
+    Copy function handling mutable values (only dicts and lists).
+    """
+    if type(value) in (dict, list):
+        return copy.deepcopy(value)
+    return value
