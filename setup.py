@@ -10,4 +10,13 @@ setup(
     download_url='',  # FIXME Add a publicly accessible URL here
     keywords=['django', 'etcd', 'config', 'settings'],
     classifiers=[],
+    install_requires=[
+        'python-etcd>=0.4.1',
+        'Django>=1.7.5',
+        'python-dateutil>=2.2'
+    ],
+    test_requires=[
+        'mock==1.3.0',
+        'bpython>=0.14.0'
+    ]
 )
