@@ -125,7 +125,7 @@ class EtcdConfigManager():
                             append=True)
                     except Exception as e:
                         errors[k] = e.message
-            return errors
+        return errors
 
     def format_set_errors(self, errors={}, env_defaults=True):
         output = []
