@@ -121,8 +121,7 @@ class EtcdConfigManager():
                     try:
                         self._client.write(
                             "{}/{}".format(path, self._encode_config_key(k)),
-                            self._encode_config_value(v),
-                            append=True)
+                            self._encode_config_value(v))
                     except Exception as e:
                         errors[k] = e.message
         return errors
