@@ -4,7 +4,7 @@ from os import utime
 from importlib import import_module
 from etcd import Client
 from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
-                    attrs_to_dir)
+                    attrs_to_dir, byteify)
 
 
 class EtcdConfigManager():
@@ -39,7 +39,8 @@ class EtcdConfigManager():
         return json.dumps(val, cls=CustomJSONEncoder)
 
     def _decode_config_value(self, val):
-        return json.loads(val, object_hook=custom_json_decoder_hook)
+        decoded = json.loads(val, object_hook=custom_json_decoder_hook)
+        return byteify(decoded)
 
     def _process_response_set(self, rset, env_defaults=True):
         d = {}
