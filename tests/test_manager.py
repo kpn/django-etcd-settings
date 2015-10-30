@@ -43,6 +43,14 @@ class EtcdResultGenerator():
 
 
 class TestEtcdConfigManager(TestCase):
+    def _dataset_for_with_empty_dir(self, env):
+        expected = {
+        }
+        keys = [EtcdResultGenerator.key('/foo/bar', None)]
+        rset = EtcdResultGenerator.result_set(
+            self.mgr._env_defaults_path(env),
+            keys)
+        return expected, rset
 
     def _dataset_for_defaults(self, env):
         expected = {
@@ -109,6 +117,12 @@ class TestEtcdConfigManager(TestCase):
             '[1, "b"]',
             self.mgr._encode_config_value((1, 'b')))
 
+    def test_process_response_set(self):
+        env = 'test'
+        expected_rs, input_rs = self._dataset_for_with_empty_dir(env)
+
+        self.assertEqual(expected_rs, self.mgr._process_response_set(input_rs))
+
     def test_decode_config_value(self):
         self.assertEqual(
             'abcde',
@@ -163,6 +177,7 @@ class TestEtcdConfigManager(TestCase):
             recursive=True)
 
     def test_monitor_config_sets(self):
+        env = 'test'
         expected, rset = self._dataset_for_configsets()
         d = {}
         self.mgr._client.eternal_watch = MagicMock(return_value=[rset])

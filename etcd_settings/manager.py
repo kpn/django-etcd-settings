@@ -46,13 +46,15 @@ class EtcdConfigManager():
         d = {}
         for leaf in rset.leaves:
             config_set, key = self._decode_config_key(leaf.key)
-            value = self._decode_config_value(leaf.value)
-            if env_defaults:
-                d[key] = value
-            else:
-                if config_set not in d:
-                    d[config_set] = {}
-                d[config_set][key] = value
+            if leaf.value is not None:
+                value = self._decode_config_value(leaf.value)
+
+                if env_defaults:
+                    d[key] = value
+                else:
+                    if config_set not in d:
+                        d[config_set] = {}
+                    d[config_set][key] = value
         return d
 
     @staticmethod
