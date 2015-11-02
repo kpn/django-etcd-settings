@@ -5,6 +5,7 @@ import os
 import copy
 from dateutil.parser import parse as parse_date
 from collections import Mapping
+from functools import wraps
 from threading import Thread
 
 
@@ -56,14 +57,24 @@ class Task(Thread):
             return self._result
 
 
-def threaded(method):
+def threaded(function=None, daemon=False):
 
-    def get_thread(*args, **kwargs):
-        t = Task(method, *args, **kwargs)
-        t.start()
-        return t
+    def wrapper_factory(func):
 
-    return get_thread
+        @wraps(func)
+        def get_thread(*args, **kwargs):
+            t = Task(func, *args, **kwargs)
+            if daemon:
+                t.daemon = True
+            t.start()
+            return t
+
+        return get_thread
+
+    if function:
+        return wrapper_factory(function)
+    else:
+        return wrapper_factory
 
 
 class CustomJSONEncoder(json.JSONEncoder):
