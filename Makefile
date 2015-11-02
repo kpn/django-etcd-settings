@@ -3,16 +3,21 @@ PIP=`. venv/bin/activate; which pip`
 DEPS:=requirements.txt
 VSN=`git describe --tags --always`
 
+.PHONY: clean distclean test shell upload deps
+
 clean:
 	@find . -name *.pyc -delete
 
 distclean: clean
 	rm -rf venv
 
-venv: clean
-	test -d venv || virtualenv-2.7 -p python2.7 venv
+venv:
+	virtualenv-2.7 -p python2.7 venv
 	$(PIP) install -U "pip>=7.0"
 	$(PIP) install -r $(DEPS)
+
+deps: venv
+	$(PIP) install -r $(DEPS) -U
 
 test: venv
 	$(PYTHON) tests.py
