@@ -10,7 +10,7 @@ from .utils import (
 class EtcdSettingsProxy(object):
 
     def __init__(self):
-        env = getattr(django_settings, 'DJES_ENV', None)
+        self.env = getattr(django_settings, 'DJES_ENV', None)
         dev_params = getattr(django_settings, 'DJES_DEV_PARAMS', None)
         etcd_details = getattr(django_settings, 'DJES_ETCD_DETAILS', None)
         self._init_req_getter(
@@ -21,7 +21,7 @@ class EtcdSettingsProxy(object):
             self._etcd_mgr = EtcdConfigManager(
                 dev_params, **etcd_details)
             self._config_sets = self._etcd_mgr.get_config_sets()
-            self._env_defaults = self._etcd_mgr.get_env_defaults(env)
+            self._env_defaults = self._etcd_mgr.get_env_defaults(self.env)
         else:
             self._etcd_mgr = None
             self._config_sets = dict()
