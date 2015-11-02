@@ -7,6 +7,15 @@ from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
                     attrs_to_dir, byteify)
 
 
+class EtcdConfigInvalidValueError(Exception):
+    def __init__(self, key, raw_value, value_error):
+        self.key = key
+        self.raw_value = raw_value
+        self.value_error = value_error
+        super(EtcdConfigInvalidValueError, self).__init__(
+            "Invalid value for key '{}'. Raising '{}', because of value: '{}'".format(key, value_error, raw_value))
+
+
 class EtcdConfigManager():
 
     def __init__(self, dev_params=None, prefix='config', protocol='http',
@@ -46,13 +55,19 @@ class EtcdConfigManager():
         d = {}
         for leaf in rset.leaves:
             config_set, key = self._decode_config_key(leaf.key)
-            value = self._decode_config_value(leaf.value)
-            if env_defaults:
-                d[key] = value
-            else:
-                if config_set not in d:
-                    d[config_set] = {}
-                d[config_set][key] = value
+            if leaf.value is not None:
+                try:
+                    value = self._decode_config_value(leaf.value)
+                except ValueError as e:
+                    raise EtcdConfigInvalidValueError(
+                        leaf.key, leaf.value, e)
+
+                if env_defaults:
+                    d[key] = value
+                else:
+                    if config_set not in d:
+                        d[config_set] = {}
+                    d[config_set][key] = value
         return d
 
     @staticmethod

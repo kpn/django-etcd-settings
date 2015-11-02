@@ -1,7 +1,7 @@
 import datetime
 from mock import MagicMock
 from etcd import EtcdResult
-from etcd_settings.manager import EtcdConfigManager
+from etcd_settings.manager import EtcdConfigManager, EtcdConfigInvalidValueError
 from django.test import TestCase
 
 
@@ -43,6 +43,23 @@ class EtcdResultGenerator():
 
 
 class TestEtcdConfigManager(TestCase):
+    longMessage = True
+
+    def _dataset_for_with_empty_dir(self, env):
+        expected = {
+        }
+        keys = [EtcdResultGenerator.key('/foo/bar', None)]
+        rset = EtcdResultGenerator.result_set(
+            self.mgr._env_defaults_path(env),
+            keys)
+        return expected, rset
+
+    def _dataset_for_with_invalid_json(self, env):
+        keys = [EtcdResultGenerator.key('/foo/bar', '{')]
+        rset = EtcdResultGenerator.result_set(
+            self.mgr._env_defaults_path(env),
+            keys)
+        return rset
 
     def _dataset_for_defaults(self, env):
         expected = {
@@ -109,6 +126,28 @@ class TestEtcdConfigManager(TestCase):
             '[1, "b"]',
             self.mgr._encode_config_value((1, 'b')))
 
+    def test_process_response_set_empty(self):
+        env = 'test'
+        expected_rs, input_rs = self._dataset_for_with_empty_dir(env)
+
+        self.assertEqual(expected_rs, self.mgr._process_response_set(input_rs))
+
+    def test_process_response_exception_handling(self):
+        env = 'test'
+        with self.assertRaises(EtcdConfigInvalidValueError) as excContext:
+            input_rs = self._dataset_for_with_invalid_json(env)
+            self.mgr._process_response_set(input_rs)
+
+        exc = excContext.exception
+
+        self.assertEqual('prefix/test/foo/bar', exc.key)
+        self.assertEqual('{', exc.raw_value)
+        self.assertIn("foo/bar", str(exc), "Expect key in message")
+        self.assertIn(
+            "Expecting object",
+            str(exc), "Expect json error in message")
+        self.assertIn("'{'", str(exc), "Expect invalid value")
+
     def test_decode_config_value(self):
         self.assertEqual(
             'abcde',
@@ -163,6 +202,7 @@ class TestEtcdConfigManager(TestCase):
             recursive=True)
 
     def test_monitor_config_sets(self):
+        env = 'test'
         expected, rset = self._dataset_for_configsets()
         d = {}
         self.mgr._client.eternal_watch = MagicMock(return_value=[rset])
