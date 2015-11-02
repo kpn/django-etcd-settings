@@ -92,7 +92,7 @@ class EtcdConfigManager():
         conf = self._process_response_set(res, env_defaults=False)
         return conf
 
-    @threaded
+    @threaded(daemon=True)
     def monitor_env_defaults(self, env='test_exa', conf={}, wsgi_file=None):
         for event in self._client.eternal_watch(
                 self._env_defaults_path(env),
@@ -105,7 +105,7 @@ class EtcdConfigManager():
                 with open(wsgi_file, 'a'):
                     utime(wsgi_file, None)
 
-    @threaded
+    @threaded(daemon=True)
     def monitor_config_sets(self, conf={}):
         for event in self._client.eternal_watch(
                 self._base_config_set_path,
