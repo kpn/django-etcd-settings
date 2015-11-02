@@ -56,11 +56,10 @@ class EtcdSettingsProxy(object):
 
     def start_monitors(self):
         if self._etcd_mgr is not None:
-            self._env_defaults = self._etcd_mgr.monitor_env_defaults(
+            self._etcd_mgr.monitor_env_defaults(
                 env=self.env, conf=self._env_defaults,
                 wsgi_file=self._wsgi_file)
-            self._config_sets = self._etcd_mgr.monitor_config_sets(
-                conf=self._config_sets)
+            self._etcd_mgr.monitor_config_sets(conf=self._config_sets)
 
     def __getattr__(self, attr):
         try:
