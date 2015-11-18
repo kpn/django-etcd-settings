@@ -79,11 +79,13 @@ class TestEtcdConfigManager(TestCase):
         expected = {
             'foo': {'BAR': 1, 'BAZ': 2},
             'foo.bar': {'BAZ': 1, 'BAZBAZ': 2},
+            'foo.bar-zoo': {'BAR': 1},
         }
         keys = [EtcdResultGenerator.key('/foo/bar', '1'),
                 EtcdResultGenerator.key('/foo/baz', '2'),
                 EtcdResultGenerator.key('/foo.bar/baz', '1'),
-                EtcdResultGenerator.key('/foo.bar/bazbaz', '2')]
+                EtcdResultGenerator.key('/foo.bar/bazbaz', '2'),
+                EtcdResultGenerator.key('/foo.bar-zoo/bar', '1')]
         rset = EtcdResultGenerator.result_set(
             self.mgr._base_config_set_path,
             keys)
