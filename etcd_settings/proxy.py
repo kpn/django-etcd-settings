@@ -76,8 +76,9 @@ class EtcdSettingsProxy(object):
             value = dj_value
 
         for override_set in self._parse_req_config_sets():
-            new_value = self._config_sets.get(override_set, {}).get(attr)
-            if new_value:
+            config_set = self._config_sets.get(override_set, {})
+            if attr in config_set:
+                new_value = config_set[attr]
                 value = copy_if_mutable(value)
                 if isinstance(value, dict) and isinstance(new_value, dict):
                     dict_rec_update(value, new_value)
