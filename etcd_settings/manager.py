@@ -26,7 +26,7 @@ class EtcdConfigManager():
         self._dev_params = dev_params
         self._base_config_set_path = "{}/extensions"\
             .format(self._base_config_path)
-        r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\.]+))/(?P<key>.+)$'
+        r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\-\.]+))/(?P<key>.+)$'
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
 
