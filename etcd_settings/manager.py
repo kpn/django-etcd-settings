@@ -1,8 +1,9 @@
 import re
 import json
+import time
 from os import utime
 from importlib import import_module
-from etcd import Client
+from etcd import Client, EtcdException
 from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
                     attrs_to_dir, byteify)
 
@@ -13,7 +14,8 @@ class EtcdConfigInvalidValueError(Exception):
         self.raw_value = raw_value
         self.value_error = value_error
         super(EtcdConfigInvalidValueError, self).__init__(
-            "Invalid value for key '{}'. Raising '{}', because of value: '{}'".format(key, value_error, raw_value))
+            "Invalid value for key '{}'. Raising '{}', because of value: '{}'"
+            .format(key, value_error, raw_value))
 
 
 class EtcdConfigManager():
@@ -29,6 +31,8 @@ class EtcdConfigManager():
         r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\-\.]+))/(?P<key>.+)$'
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
+        self.LONG_POLLING_TIMEOUT = 50
+        self.LONG_POLLING_SAFETY_DELAY = 5
 
     def _env_defaults_path(self, env='test'):
         return "{}/{}".format(self._base_config_path, env)
@@ -93,11 +97,10 @@ class EtcdConfigManager():
         return conf
 
     @threaded(daemon=True)
-    def monitor_env_defaults(self, env='test_exa', conf={}, wsgi_file=None):
-        for event in self._client.eternal_watch(
-                self._env_defaults_path(env),
-                index=self._etcd_index,
-                recursive=True):
+    def monitor_env_defaults(
+            self, env='test_exa', conf={}, wsgi_file=None, max_events=None):
+        for event in self._watch(
+                self._env_defaults_path(env), conf, wsgi_file, max_events):
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event))
             conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
@@ -106,13 +109,30 @@ class EtcdConfigManager():
                     utime(wsgi_file, None)
 
     @threaded(daemon=True)
-    def monitor_config_sets(self, conf={}):
-        for event in self._client.eternal_watch(
-                self._base_config_set_path,
-                index=self._etcd_index,
-                recursive=True):
+    def monitor_config_sets(self, conf={}, max_events=None):
+        for event in self._watch(self._base_config_set_path, conf=conf, max_events=max_events):
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event, env_defaults=False))
+
+    def _watch(self, path, conf={}, wsgi_file=None, max_events=None):
+        i = 0
+        while (max_events) and (i < max_events):
+            try:
+                i += 1
+                res = self._client.watch(
+                    path,
+                    index=self._etcd_index,
+                    recursive=True,
+                    timeout=self.LONG_POLLING_TIMEOUT)
+                yield res
+            except EtcdException as e:
+                if 'timed out' in e.message:
+                    continue
+                else:
+                    raise e
+            except Exception as e:
+                time.sleep(self.LONG_POLLING_SAFETY_DELAY)
+            continue
 
     def set_env_defaults(self, env='test_exa', conf={}):
         path = self._env_defaults_path(env)

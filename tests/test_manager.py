@@ -192,28 +192,29 @@ class TestEtcdConfigManager(TestCase):
         env = 'test'
         expected, rset = self._dataset_for_defaults(env)
         d = {}
-        self.mgr._client.eternal_watch = MagicMock(return_value=[rset])
+        self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
-        t = self.mgr.monitor_env_defaults(env=env, conf=d)
+        t = self.mgr.monitor_env_defaults(env=env, conf=d, max_events=1)
         self.assertEqual(None, t.result)
         self.assertEqual(expected, d)
         self.assertEqual(99, self.mgr._etcd_index)
-        self.mgr._client.eternal_watch.assert_called_with(
+        self.mgr._client.watch.assert_called_with(
             self.mgr._env_defaults_path(env),
             index=old_etcd_index,
-            recursive=True)
+            recursive=True,
+            timeout=50)
 
     def test_monitor_config_sets(self):
-        env = 'test'
         expected, rset = self._dataset_for_configsets()
         d = {}
-        self.mgr._client.eternal_watch = MagicMock(return_value=[rset])
+        self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
-        t = self.mgr.monitor_config_sets(conf=d)
+        t = self.mgr.monitor_config_sets(conf=d, max_events=1)
         self.assertEqual(None, t.result)
         self.assertEqual(expected, d)
         self.assertEqual(99, self.mgr._etcd_index)
-        self.mgr._client.eternal_watch.assert_called_with(
+        self.mgr._client.watch.assert_called_with(
             self.mgr._base_config_set_path,
             index=old_etcd_index,
-            recursive=True)
+            recursive=True,
+            timeout=50)
