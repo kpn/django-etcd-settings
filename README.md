@@ -29,16 +29,23 @@ This application has been tested for Python 2.7 and Django 1.7
 
 This Django application uses the following configuration keys:
 
-* `DJES_ETCD_DETAILS`: a dict with 'host', 'port', 'protocol' and 'prefix'.
+* `DJES_ETCD_DETAILS`: a dict with 'host', 'port', 'protocol', 'prefix',
+    'long_polling_timeout' and 'long_polling_safety_delay' (both in seconds).
     'prefix' is a string to be used as base path for all configuration
     managed by this app.
     i.e. '/config/api' will result in '/config/api/<ENV>' and
     '/config/api/extensions/' to be used for environment defaults and
     config_sets respectively
+    Timeouts default to 50 and 5 seconds respectively.
     If `DJES_ETCD_SETTINGS` is None, this app will start with no errors and
     etcd_settings.settings will resolve to django.conf.settings plus your
     DJES_DEV_PARAMS overwrites
-    i.e. `ETCD_DETAILS = dict(host='localhost', port=4000, protocol='http')`
+    i.e.
+    ```
+    ETCD_DETAILS = dict(
+        host='localhost', port=4000, protocol='http',
+        long_polling_timout=50, long_polling_safety_delay=5
+    )`
 
 * `DJES_DEV_PARAMS`: A module with local overwrites, genarally used for
     development. The overwrites must be capitalized module attributes.
