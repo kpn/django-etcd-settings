@@ -1,6 +1,7 @@
 import re
 import json
 import time
+import logging
 from os import utime
 from importlib import import_module
 from etcd import Client, EtcdException
@@ -35,6 +36,13 @@ class EtcdConfigManager():
         self._etcd_index = 0
         self.long_polling_timeout = 50
         self.long_polling_safety_delay = 5
+        self._init_logger()
+
+    def _init_logger(self):
+        self.logger = logging.getLogger('etcd_config_manager')
+        logger_console_handler = logging.StreamHandler()
+        logger_console_handler.setLevel(logging.ERROR)
+        self.logger.addHandler(logger_console_handler)
 
     def _env_defaults_path(self, env='test'):
         return "{}/{}".format(self._base_config_path, env)
@@ -127,14 +135,11 @@ class EtcdConfigManager():
                     recursive=True,
                     timeout=self.long_polling_timeout)
                 yield res
-            except EtcdException as e:
-                if 'timed out' in e.message:
-                    continue
-                else:
-                    raise e
             except Exception as e:
+                if isinstance(EtcdException, e) and ('timed out' in e.message):
+                    continue
+                self.logger.error("Long Polling Error: {}".format(e))
                 time.sleep(self.long_polling_safety_delay)
-            continue
 
     def set_env_defaults(self, env='test_exa', conf={}):
         path = self._env_defaults_path(env)

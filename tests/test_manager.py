@@ -96,6 +96,9 @@ class TestEtcdConfigManager(TestCase):
             dev_params=None, prefix='prefix',
             protocol='foo', host='foo', port=0)
 
+    def test_init_logger(self):
+        self.assertIsNotNone(self.mgr.logger)
+
     def test_encode_config_key(self):
         self.assertEqual(
             'foo/bar/baz',
