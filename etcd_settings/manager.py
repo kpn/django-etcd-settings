@@ -1,12 +1,14 @@
-import re
 import json
-import time
 import logging
-from os import utime
+import re
+import time
 from importlib import import_module
-from etcd import Client, EtcdException
-from .utils import (threaded, CustomJSONEncoder, custom_json_decoder_hook,
-                    attrs_to_dir, byteify)
+from os import utime
+from etcd import (Client, EtcdException)
+from .utils import (
+    threaded, CustomJSONEncoder,
+    custom_json_decoder_hook, attrs_to_dir, byteify
+)
 
 
 class EtcdConfigInvalidValueError(Exception):
@@ -31,7 +33,8 @@ class EtcdConfigManager():
         self._dev_params = dev_params
         self._base_config_set_path = "{}/extensions"\
             .format(self._base_config_path)
-        r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\-\.]+))/(?P<key>.+)$'
+        r = ('^(?P<path>{}/(?:extensions/)?'
+             '(?P<envorset>[\w\-\.]+))/(?P<key>.+)$')
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
         self.long_polling_timeout = 50
@@ -91,7 +94,7 @@ class EtcdConfigManager():
             params = attrs_to_dir(import_module(mod))
         return params
 
-    def get_env_defaults(self, env='test_exa'):
+    def get_env_defaults(self, env):
         res = self._client.read(
             self._env_defaults_path(env),
             recursive=True)
@@ -108,7 +111,7 @@ class EtcdConfigManager():
 
     @threaded(daemon=True)
     def monitor_env_defaults(
-            self, env='test_exa', conf={}, wsgi_file=None, max_events=None):
+            self, env, conf={}, wsgi_file=None, max_events=None):
         for event in self._watch(
                 self._env_defaults_path(env), conf, wsgi_file, max_events):
             self._etcd_index = event.etcd_index
@@ -120,7 +123,8 @@ class EtcdConfigManager():
 
     @threaded(daemon=True)
     def monitor_config_sets(self, conf={}, max_events=None):
-        for event in self._watch(self._base_config_set_path, conf=conf, max_events=max_events):
+        for event in self._watch(
+                self._base_config_set_path, conf=conf, max_events=max_events):
             self._etcd_index = event.etcd_index
             conf.update(self._process_response_set(event, env_defaults=False))
 
@@ -141,7 +145,7 @@ class EtcdConfigManager():
                 self.logger.error("Long Polling Error: {}".format(e))
                 time.sleep(self.long_polling_safety_delay)
 
-    def set_env_defaults(self, env='test_exa', conf={}):
+    def set_env_defaults(self, env, conf={}):
         path = self._env_defaults_path(env)
         errors = {}
         for k, v in conf.iteritems():
