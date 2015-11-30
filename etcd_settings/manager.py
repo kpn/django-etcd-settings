@@ -20,8 +20,10 @@ class EtcdConfigInvalidValueError(Exception):
 
 class EtcdConfigManager():
 
-    def __init__(self, dev_params=None, prefix='config', protocol='http',
-                 host='localhost', port=2379):
+    def __init__(
+            self, dev_params=None, prefix='config', protocol='http',
+            host='localhost', port=2379, long_polling_timeout=50,
+            long_polling_safety_delay=5):
         self._client = Client(
             host=host, port=port, protocol=protocol, allow_redirect=True)
         self._base_config_path = prefix
@@ -31,8 +33,8 @@ class EtcdConfigManager():
         r = '^(?P<path>{}/(?:extensions/)?(?P<envorset>[\w\-\.]+))/(?P<key>.+)$'
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
-        self.LONG_POLLING_TIMEOUT = 50
-        self.LONG_POLLING_SAFETY_DELAY = 5
+        self.long_polling_timeout = 50
+        self.long_polling_safety_delay = 5
 
     def _env_defaults_path(self, env='test'):
         return "{}/{}".format(self._base_config_path, env)
@@ -123,7 +125,7 @@ class EtcdConfigManager():
                     path,
                     index=self._etcd_index,
                     recursive=True,
-                    timeout=self.LONG_POLLING_TIMEOUT)
+                    timeout=self.long_polling_timeout)
                 yield res
             except EtcdException as e:
                 if 'timed out' in e.message:
@@ -131,7 +133,7 @@ class EtcdConfigManager():
                 else:
                     raise e
             except Exception as e:
-                time.sleep(self.LONG_POLLING_SAFETY_DELAY)
+                time.sleep(self.long_polling_safety_delay)
             continue
 
     def set_env_defaults(self, env='test_exa', conf={}):
