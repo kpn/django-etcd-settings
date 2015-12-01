@@ -37,8 +37,8 @@ class EtcdConfigManager():
              '(?P<envorset>[\w\-\.]+))/(?P<key>.+)$')
         self._key_regex = re.compile(r.format(self._base_config_path))
         self._etcd_index = 0
-        self.long_polling_timeout = 50
-        self.long_polling_safety_delay = 5
+        self.long_polling_timeout = long_polling_timeout
+        self.long_polling_safety_delay = long_polling_safety_delay
         self._init_logger()
 
     def _init_logger(self):
@@ -130,7 +130,7 @@ class EtcdConfigManager():
 
     def _watch(self, path, conf={}, wsgi_file=None, max_events=None):
         i = 0
-        while (max_events) and (i < max_events):
+        while (max_events is None) or (i < max_events):
             try:
                 i += 1
                 res = self._client.watch(
@@ -140,7 +140,7 @@ class EtcdConfigManager():
                     timeout=self.long_polling_timeout)
                 yield res
             except Exception as e:
-                if isinstance(EtcdException, e) and ('timed out' in e.message):
+                if isinstance(e, EtcdException) and ('timed out' in e.message):
                     continue
                 self.logger.error("Long Polling Error: {}".format(e))
                 time.sleep(self.long_polling_safety_delay)
