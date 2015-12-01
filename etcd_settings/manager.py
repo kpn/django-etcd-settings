@@ -29,6 +29,8 @@ class EtcdConfigManager():
             long_polling_safety_delay=5):
         self._client = Client(
             host=host, port=port, protocol=protocol, allow_redirect=True)
+        # Overriding retries for urllib3.PoolManager.connection_pool_kw
+        self._client.http.connection_pool_kw['retries'] = 0
         self._base_config_path = prefix
         self._dev_params = dev_params
         self._base_config_set_path = "{}/extensions"\
