@@ -45,7 +45,8 @@ This Django application uses the following configuration keys:
     ETCD_DETAILS = dict(
         host='localhost', port=4000, protocol='http',
         long_polling_timout=50, long_polling_safety_delay=5
-    )`
+    )
+    ```
 
 * `DJES_DEV_PARAMS`: A module with local overwrites, genarally used for
     development. The overwrites must be capitalized module attributes.
