@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kpn-digital/django-etcd-settings.svg?branch=master)](https://travis-ci.org/kpn-digital/django-etcd-settings)
+
 # django-etcd-settings
 
 ## Goal
