@@ -114,21 +114,30 @@ class EtcdConfigManager():
     @threaded(daemon=True)
     def monitor_env_defaults(
             self, env, conf={}, wsgi_file=None, max_events=None):
+        processed_events = 0
         for event in self._watch(
                 self._env_defaults_path(env), conf, wsgi_file, max_events):
-            self._etcd_index = event.etcd_index
-            conf.update(self._process_response_set(event))
-            conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
-            if wsgi_file:
-                with open(wsgi_file, 'a'):
-                    utime(wsgi_file, None)
+            if event is not None:
+                self._etcd_index = event.etcd_index
+                conf.update(self._process_response_set(event))
+                conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
+                if wsgi_file:
+                    with open(wsgi_file, 'a'):
+                        utime(wsgi_file, None)
+            processed_events += 1
+        return processed_events
 
     @threaded(daemon=True)
     def monitor_config_sets(self, conf={}, max_events=None):
+        processed_events = 0
         for event in self._watch(
                 self._base_config_set_path, conf=conf, max_events=max_events):
-            self._etcd_index = event.etcd_index
-            conf.update(self._process_response_set(event, env_defaults=False))
+            if event is not None:
+                self._etcd_index = event.etcd_index
+                conf.update(
+                    self._process_response_set(event, env_defaults=False))
+            processed_events += 1
+        return processed_events
 
     def _watch(self, path, conf={}, wsgi_file=None, max_events=None):
         i = 0
@@ -142,10 +151,11 @@ class EtcdConfigManager():
                     timeout=self.long_polling_timeout)
                 yield res
             except Exception as e:
-                if isinstance(e, EtcdException) and ('timed out' in e.message):
-                    continue
-                self.logger.error("Long Polling Error: {}".format(e))
-                time.sleep(self.long_polling_safety_delay)
+                if not (isinstance(e, EtcdException)
+                        and ('timed out' in e.message)):
+                    self.logger.error("Long Polling Error: {}".format(e))
+                    time.sleep(self.long_polling_safety_delay)
+                yield None
 
     def set_env_defaults(self, env, conf={}):
         path = self._env_defaults_path(env)

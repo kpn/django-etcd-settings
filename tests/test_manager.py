@@ -1,8 +1,12 @@
 import datetime
-from mock import MagicMock
-from etcd import EtcdResult
-from etcd_settings.manager import EtcdConfigManager, EtcdConfigInvalidValueError
+import logging
+import time
 from django.test import TestCase
+from mock import MagicMock
+from etcd import (EtcdResult, EtcdException)
+from etcd_settings.manager import (
+    EtcdConfigManager, EtcdConfigInvalidValueError
+)
 
 
 class EtcdResultGenerator():
@@ -94,7 +98,11 @@ class TestEtcdConfigManager(TestCase):
     def setUp(self):
         self.mgr = EtcdConfigManager(
             dev_params=None, prefix='prefix',
-            protocol='foo', host='foo', port=0)
+            protocol='foo', host='foo', port=0,
+            long_polling_timeout=50,
+            long_polling_safety_delay=0.1)
+        for l in self.mgr.logger.handlers:
+            l.setLevel(logging.CRITICAL)
 
     def test_init_logger(self):
         self.assertIsNotNone(self.mgr.logger)
@@ -198,7 +206,7 @@ class TestEtcdConfigManager(TestCase):
         self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
         t = self.mgr.monitor_env_defaults(env=env, conf=d, max_events=1)
-        self.assertEqual(None, t.result)
+        self.assertEqual(1, t.result)
         self.assertEqual(expected, d)
         self.assertEqual(99, self.mgr._etcd_index)
         self.mgr._client.watch.assert_called_with(
@@ -213,7 +221,7 @@ class TestEtcdConfigManager(TestCase):
         self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
         t = self.mgr.monitor_config_sets(conf=d, max_events=1)
-        self.assertEqual(None, t.result)
+        self.assertEqual(1, t.result)
         self.assertEqual(expected, d)
         self.assertEqual(99, self.mgr._etcd_index)
         self.mgr._client.watch.assert_called_with(
@@ -221,3 +229,47 @@ class TestEtcdConfigManager(TestCase):
             index=old_etcd_index,
             recursive=True,
             timeout=50)
+
+    def test_monitors_delay_and_continue_on_exception(self):
+        env = 'test'
+        d = {}
+        max_events = 2
+        lambdas = [
+            lambda: self.mgr.monitor_env_defaults(
+                env, conf=d, max_events=max_events),
+            lambda: self.mgr.monitor_config_sets(
+                conf=d, max_events=max_events),
+        ]
+        for l in lambdas:
+            t0 = time.time()
+            t = l()
+            self.assertEqual(max_events, t.result)
+            self.assertEqual(
+                True,
+                (time.time() - t0)
+                > (max_events * self.mgr.long_polling_safety_delay)
+            )
+            self.assertEqual(False, t.is_alive())
+
+    def test_monitors_continue_on_etcd_exception(self):
+        env = 'test'
+        d = {}
+        max_events = 2
+        self.mgr._client.watch = MagicMock(
+            side_effect=EtcdException('timed out'))
+        lambdas = [
+            lambda: self.mgr.monitor_env_defaults(
+                env, conf=d, max_events=max_events),
+            lambda: self.mgr.monitor_config_sets(
+                conf=d, max_events=max_events),
+        ]
+        for l in lambdas:
+            t0 = time.time()
+            t = l()
+            self.assertEqual(max_events, t.result)
+            self.assertEqual(
+                True,
+                (time.time() - t0)
+                < (max_events * self.mgr.long_polling_safety_delay)
+            )
+            self.assertEqual(False, t.is_alive())
