@@ -12,7 +12,5 @@ syntax: glob
 # Compiled source
 *.pyc
 
-params.py
-
 # Other
 /venv
