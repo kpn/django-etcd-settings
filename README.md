@@ -20,7 +20,7 @@ For now, just install it by pointing to this repository. You can either:
 
 2. Have your Django application depend on this by using something like this in
    your `requirements.txt` file:
-   `git+ssh://git@stash.kpnnl.local:7999/de/django-etcd-settings.git@master#egg=etcd_settings`
+   `https://github.com/kpn-digital/django-etcd-settings.git/kpn-digital/django-etcd-settings.git@master#egg=etcd_settings`
 
 
 ## Compatibility
