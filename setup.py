@@ -1,22 +1,29 @@
-from distutils.core import setup
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from pkgversion import list_requirements, pep440_version
+from setuptools import setup, find_packages
+
 setup(
-    name='etcd_settings',
-    packages=['etcd_settings'],
-    version='0.0',
-    description='A dynamic settings management solution for django using ETCD',
-    author='Enrique Paz',
-    author_email='enrique.pazperez@kpn.com',
-    url='https://stash.kpnnl.local/projects/DE/repos/django-etcd-settings',
-    download_url='',  # FIXME Add a publicly accessible URL here
-    keywords=['django', 'etcd', 'config', 'settings'],
-    classifiers=[],
-    install_requires=[
-        'python-etcd>=0.4.1',
-        'Django>=1.7.5',
-        'python-dateutil>=2.2'
-    ],
-    test_requires=[
-        'mock==1.3.0',
-        'bpython>=0.14.0'
+    name='django-etcd-settings',
+    version=pep440_version(),
+    description="A dynamic settings management solution for django using ETCD",
+    long_description=open('README.md').read(),
+    author="Enrique Paz",
+    author_email='quiquepaz@gmail.com',
+    url='https://stash.kpnnl.local/DE/django-etcd-settings',
+    install_requires=list_requirements('requirements/requirements-base.txt'),
+    packages=find_packages(exclude=['etcd_settings.tests*']),
+    tests_require=['tox'],
+    include_package_data=True,
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Internet :: WWW/HTTP',
     ]
 )

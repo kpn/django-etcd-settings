@@ -4,10 +4,12 @@ import re
 import time
 from importlib import import_module
 from os import utime
-from etcd import (Client, EtcdException)
+
+from etcd import Client, EtcdException
+
 from .utils import (
-    threaded, CustomJSONEncoder,
-    custom_json_decoder_hook, attrs_to_dir, byteify
+    CustomJSONEncoder, attrs_to_dir, byteify, custom_json_decoder_hook,
+    threaded,
 )
 
 

@@ -1,5 +1,3 @@
-Django==1.7.5
-python-etcd==0.4.1
-mock==1.3.0
-python-dateutil==2.2
-bpython>=0.14.0
+# Additional packages
+-r requirements/requirements-base.txt
+-r requirements/requirements-testing.txt

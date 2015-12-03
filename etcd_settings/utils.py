@@ -1,12 +1,13 @@
-import sys
-import json
-import datetime
-import os
 import copy
-from dateutil.parser import parse as parse_date
+import datetime
+import json
+import os
+import sys
 from collections import Mapping
 from functools import wraps
 from threading import Thread
+
+from dateutil.parser import parse as parse_date
 
 
 def attrs_to_dir(mod):
@@ -110,6 +111,7 @@ def find_project_root(root_indicator='manage.py', current=os.getcwd()):
         raise IOError('Not found: {}'.format(root_indicator))
     else:
         return find_project_root(root_indicator, parent)
+
 
 def copy_if_mutable(value):
     """

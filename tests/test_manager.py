@@ -1,12 +1,13 @@
 import datetime
 import logging
 import time
+
 from django.test import TestCase
-from mock import MagicMock
-from etcd import (EtcdResult, EtcdException)
+from etcd import EtcdException, EtcdResult
 from etcd_settings.manager import (
-    EtcdConfigManager, EtcdConfigInvalidValueError
+    EtcdConfigInvalidValueError, EtcdConfigManager,
 )
+from mock import MagicMock
 
 
 class EtcdResultGenerator():

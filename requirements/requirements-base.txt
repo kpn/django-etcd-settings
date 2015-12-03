@@ -1,0 +1,4 @@
+git+ssh://git@stash.kpnnl.local:7999/de/py-pkgversion.git@1.0.0#egg=py-pkgversion
+Django>=1.7.5
+python-etcd>=0.4.1
+python-dateutil>=2.2
