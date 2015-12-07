@@ -48,6 +48,8 @@ class EtcdSettingsProxy(object):
             fun_s = m.group('f')
             mod = import_module(mod_s)
             self._req_getter = getattr(mod, fun_s)
+        else:
+            self._req_getter = None
 
     def _parse_req_config_sets(self):
         sets = []
