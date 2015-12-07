@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import time
 
@@ -133,12 +134,13 @@ class TestEtcdConfigManager(TestCase):
             '112',
             self.mgr._encode_config_value(112))
         self.assertEqual(
-            '{"foo": 1, "bar": "baz"}',
-            self.mgr._encode_config_value(dict(foo=1, bar='baz')))
-        self.assertEqual(
             # Tuples are lost in encoding, should be avoided as config values
             '[1, "b"]',
             self.mgr._encode_config_value((1, 'b')))
+        encoded_config = self.mgr._encode_config_value(dict(foo=1, bar='baz'))
+        self.assertEqual(
+            json.loads('{"foo": 1, "bar": "baz"}'),
+            json.loads(encoded_config))
 
     def test_process_response_set_empty(self):
         env = 'test'
