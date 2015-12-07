@@ -4,7 +4,7 @@
 
 ## Goal
 
-This application allows the extending the Django settings as configured in the
+This application allows you to extend the Django settings as configured in the
 `settings.py` file with:
 
 * Environment dependent values
@@ -25,7 +25,7 @@ For now, just install it by pointing to this repository. You can either:
 
 ## Compatibility
 
-This application has been tested for Python 2.7 and Django 1.7
+This application has been tested with Python 2.7 and Django 1.7
 
 ## Configuration
 
@@ -50,10 +50,10 @@ This Django application uses the following configuration keys:
     )
     ```
 
-* `DJES_DEV_PARAMS`: A module with local overwrites, genarally used for
+* `DJES_DEV_PARAMS`: A module with local overwrites, generally used for
     development. The overwrites must be capitalized module attributes.
     These overwrites will have preference over development settings on ETCD,
-    but not over configset overwrites indicated by the `X_DYNAMIC-SETTINGS`
+    but not over configset overwrites indicated by the `X-DYNAMIC-SETTINGS`
     HTTP header
 
 * `DJES_ENV`: A string with the name of the environment in which the code is
@@ -63,7 +63,7 @@ This Django application uses the following configuration keys:
 
 * `DJES_REQUEST_GETTER`: path to a function which accesses the HTTP request
     object being handled. Ensuring access to this value can be implemented
-    with, for instance, a middleware.  This settings is only used to allow
+    with, for instance, middleware. This settings is only used to allow
     config overwrites on runtime based on predifined config_sets. In case you
     don't want to use this functionality, just set this setting to None
     i.e. 'middleware.thread_local.get_current_request'
