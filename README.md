@@ -98,13 +98,3 @@ locals().update(extra_settings)
 
 * Extending the unit tests in order to cover `etcd_settings.proxy` and more of
   `etcd_settings.manager`
-
-* Moving this repository to [Github](http://www.github.com) and updating `url`
-  and `download_url` in `setup.py` file with the new repo location
-
-* Uploading this package to [PyPi](https://pypi.python.org). A user needs to be
-  configured in `.pypirc`. After that, run:
-  ```
-  UPLOAD_TARGET=<upload_target> make upload
-  ```
-  ... where upload_target is one of `pypitest` or `pypi`
