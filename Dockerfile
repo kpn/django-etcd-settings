@@ -1,4 +1,4 @@
-FROM kpn-digital/tox:latest
+FROM kpndigital/tox:latest
 
 WORKDIR /app
 
