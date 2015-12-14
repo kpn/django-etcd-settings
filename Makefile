@@ -10,32 +10,35 @@ DOCKER_COMPOSE:=$(shell which docker-compose)
 PIP:="venv/bin/pip"
 CMD_FROM_VENV:=". venv/bin/activate; which"
 TOX=$(shell "$(CMD_FROM_VENV)" "tox")
+PYTHON=$(shell "$(CMD_FROM_VENV)" "python")
 TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
 
-.PHONY: clean docsclean distclean test lint docs docker
+.PHONY: clean docsclean pyclean test lint isort docs docker setup.py
 
-build: venv clean
+tox: clean venv
 	$(TOX)
 
-clean:
+pyclean:
 	@find . -name *.pyc -delete
-	@rm -rf de_core.egg-info build
+	@rm -rf *.egg-info build
+	@rm -rf coverage.xml .coverage
 
 docsclean:
 	@rm -fr docs/_build/
+	@rm -fr docs/api/
 
-distclean: clean docsclean
+clean: pyclean docsclean
 	@rm -rf venv
 
 venv:
-	@virtualenv-2.7 -p python2.7 venv
+	@virtualenv -p python2.7 venv
 	@$(PIP) install -U "pip>=7.0" -q
 	@$(PIP) install -r $(DEPS)
 
-test: venv clean
+test: venv pyclean
 	$(TOX) -e $(TOX_PY_LIST)
 
-test/%: venv clean
+test/%: venv pyclean
 	$(TOX) -e $(TOX_PY_LIST) -- $*
 
 lint: venv
@@ -45,7 +48,7 @@ lint: venv
 isort: venv
 	@$(TOX) -e isort-fix
 
-docs: venv
+docs: venv docsclean
 	@$(TOX) -e docs
 
 docker:
@@ -53,3 +56,11 @@ docker:
 
 docker/%:
 	$(DOCKER_COMPOSE) run --rm app make $*
+
+setup.py: venv
+	$(PYTHON) setup_gen.py
+
+publish: setup.py
+	$(PYTHON) setup.py sdist upload
+
+build: clean venv tox setup.py

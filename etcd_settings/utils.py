@@ -53,7 +53,8 @@ class Task(Thread):
     def result(self):
         self.join()
         if self.__exc_info is not None:
-            raise self.__exc_info[0], self.__exc_info[1], self.__exc_info[2]
+            # raise(self.__exc_info[0], self.__exc_info[1], self.__exc_info[2])
+            raise self.__exc_info[1].with_traceback(self.__exc_info[2])
         else:
             return self._result
 
@@ -124,11 +125,10 @@ def copy_if_mutable(value):
 
 def byteify(input):
     if isinstance(input, dict):
-        return {byteify(key): byteify(value)
-                for key, value in input.iteritems()}
+        return {byteify(key): byteify(value) for key, value in input.items()}
     elif isinstance(input, list):
         return [byteify(element) for element in input]
-    elif isinstance(input, unicode):
+    elif type(input) == 'unicode':
         return input.encode('utf-8')
     else:
         return input

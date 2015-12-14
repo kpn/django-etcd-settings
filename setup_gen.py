@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pkgversion import list_requirements, pep440_version
-from setuptools import setup, find_packages
+from pkgversion import list_requirements, pep440_version, write_setup_py
+from setuptools import find_packages
 
-setup(
+write_setup_py(
     name='django-etcd-settings',
     version=pep440_version(),
-    description="A dynamic settings management solution for django using ETCD",
-    long_description=open('README.md').read(),
+    description="A dynamic settings management solution for Django using ETCD",
+    long_description=open('README.rst').read(),
     author="Enrique Paz",
-    author_email='quiquepaz@gmail.com',
-    url='https://stash.kpnnl.local/DE/django-etcd-settings',
+    author_email='enrique.pazperez@kpn.com',
+    url='https://github.com/kpn-digital/django-etcd-settings',
     install_requires=list_requirements('requirements/requirements-base.txt'),
-    packages=find_packages(exclude=['etcd_settings.tests*']),
+    packages=find_packages(exclude=['tests*']),
     tests_require=['tox'],
     include_package_data=True,
     zip_safe=False,

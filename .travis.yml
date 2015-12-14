@@ -1,8 +1,23 @@
 language: python
-python:
-  - "2.7"
-  - "3.5"
-# command to install dependencies
-install: "pip install -r requirements.txt"
-# command to run tests
-script: "make lint test"
+sudo: required
+
+services:
+  - docker
+
+script:
+  - make docker/build
+
+before_install:
+  - pip install codecov
+after_success:
+  - codecov
+
+deploy:
+  provider: pypi
+  user: kpn-digital
+  password:
+    secure: JNZjSjmg7BBHTzBC7yuVtHLgSM5NGhSUEFHHfN9qX5j5z4ZZe/3TGNKt5UMinUTEEw396bU2pJ+QEDSRY48ZkySPBU/mrzlpC1H+OffOHvywxKwIaC7KejV8gXPToY6qwRI6jqVUM5Rk569Iv+CB183/wDzJIrRWZTF2dhX/vBsNraacJQwzT90OqoZFRPAff/992uQHa534yAaI3m0s7Tdw7Q7eHc2mimTKb/gS4WG8NxKKYJvWAFyk9JaKcb+ZjD/O2WiwqZ1n9DF7YijRWo2YXH4EEKRdv7Nt2ggMlBZAFceBgnJV51juTm4LtW0KAqDR/ZQDII3rGz2uAVb582iljmjKFKd7CE6Az9YrDyG553G8FlnGAG55NhvXOlYwwgTpBD3A9sAHpy2LnBgIb0zMc5mkrtvVuCVg1vKAHlVpA+eB3wn5DYzDjZsZxppT30c+FnywastTwYrSG6TAOLEUjSJSon/cfocd9eBo8qvB6GHdSdt5zlzY0RG4PwoaRbm9JvJsWaqN8MGUHJwDdzc8VDFZuV/cp0gq2O81Z3GznuPMDzMICR+2Z1dIH/PfsGjkdKoOy/rVwpGm3OegsQ0cMjPsC0EK1jz3jq3p1LfKbVkrTihRrZ4yYqEYF0NhgXtlsRaV97tnXdKXqwfKP90UhcdgpOug2XvT9agtbpE=
+  skip_cleanup: true
+  on:
+    tags: true
+    all_branches: true

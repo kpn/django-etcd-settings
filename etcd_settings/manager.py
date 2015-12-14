@@ -154,7 +154,7 @@ class EtcdConfigManager():
                 yield res
             except Exception as e:
                 if not (isinstance(e, EtcdException)
-                        and ('timed out' in e.message)):
+                        and ('timed out' in str(e))):
                     self.logger.error("Long Polling Error: {}".format(e))
                     time.sleep(self.long_polling_safety_delay)
                 yield None
