@@ -1,8 +1,21 @@
-[![Build Status](https://travis-ci.org/kpn-digital/django-etcd-settings.svg?branch=master)](https://travis-ci.org/kpn-digital/django-etcd-settings)
+Django ETCD Settings
+=====================
 
-# django-etcd-settings
+.. image:: https://secure.travis-ci.org/kpn-digital/django-etcd-settings.svg?branch=master
+    :target:  http://travis-ci.org/kpn-digital/django-etcd-settings?branch=master
 
-## Goal
+.. image:: https://img.shields.io/codecov/c/github/kpn-digital/django-etcd-settings/master.svg
+    :target: http://codecov.io/github/kpn-digital/django-etcd-settings?branch=master
+
+.. image:: https://img.shields.io/pypi/v/django-etcd-settings.svg
+    :target: https://pypi.python.org/pypi/django-etcd-settings
+
+.. image:: https://readthedocs.org/projects/django-etcd-settings?version=latest
+    :target: http://django-etcd-settings.readthedocs.org/en/latest/?badge=latest
+
+
+Features
+--------
 
 This application allows you to extend the Django settings as configured in the
 `settings.py` file with:
@@ -11,23 +24,27 @@ This application allows you to extend the Django settings as configured in the
 * Values in different config sets, identified by name, which can be selected on
   a 'per request' basis using the `X-DYNAMIC-SETTINGS` HTTP header
 
-## Installation
-
-For now, just install it by pointing to this repository. You can either:
-
-1. Clone this repository and run `make test` to check the library out and
-   contribute to it
-
-2. Have your Django application depend on this by using something like this in
-   your `requirements.txt` file:
-   `https://github.com/kpn-digital/django-etcd-settings.git/kpn-digital/django-etcd-settings.git@master#egg=etcd_settings`
+Both the added configuration values and config sets would live at ETCD, which
+will be continuously monitores by this library in order to transparently update
+your app settings upon changes.
 
 
-## Compatibility
+Backends
+--------
 
-This application has been tested with Python 2.7 and Django 1.7
+- ETCD 2.2.1
 
-## Configuration
+
+Installation
+------------
+
+.. code-block:: bash
+
+    $ pip install py-timeexecution
+
+
+Usage
+-----
 
 This Django application uses the following configuration keys:
 
@@ -43,12 +60,12 @@ This Django application uses the following configuration keys:
     etcd_settings.settings will resolve to django.conf.settings plus your
     DJES_DEV_PARAMS overwrites
     i.e.
-    ```
+.. code-block:: python
+
     ETCD_DETAILS = dict(
         host='localhost', port=4000, protocol='http',
         long_polling_timout=50, long_polling_safety_delay=5
     )
-    ```
 
 * `DJES_DEV_PARAMS`: A module with local overwrites, generally used for
     development. The overwrites must be capitalized module attributes.
@@ -87,14 +104,9 @@ Django settings.py file (i.e. Database config), you can use the following
 snippet in your settings file, as high as possible in the file and immediately
 under the `DJES_*` settings definition:
 
-```
-import etcd_settings.loader
-extra_settings = etcd_settings.loader.get_overwrites(
-    DJES_ENV, DJES_DEV_PARAMS, DJES_ETCD_DETAILS)
-locals().update(extra_settings)
-```
+.. code-block:: python
 
-## TODO
-
-* Extending the unit tests in order to cover `etcd_settings.proxy` and more of
-  `etcd_settings.manager`
+    import etcd_settings.loader
+    extra_settings = etcd_settings.loader.get_overwrites(
+        DJES_ENV, DJES_DEV_PARAMS, DJES_ETCD_DETAILS)
+    locals().update(extra_settings)
