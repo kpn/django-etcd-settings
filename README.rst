@@ -60,12 +60,12 @@ This Django application uses the following configuration keys:
     etcd_settings.settings will resolve to django.conf.settings plus your
     DJES_DEV_PARAMS overwrites
     i.e.
-.. code-block:: python
+    .. code-block:: python
 
-    ETCD_DETAILS = dict(
-        host='localhost', port=4000, protocol='http',
-        long_polling_timout=50, long_polling_safety_delay=5
-    )
+        ETCD_DETAILS = dict(
+            host='localhost', port=4000, protocol='http',
+            long_polling_timout=50, long_polling_safety_delay=5
+        )
 
 * ``DJES_DEV_PARAMS``: A module with local overwrites, generally used for
     development. The overwrites must be capitalized module attributes.
@@ -104,9 +104,9 @@ Django settings.py file (i.e. Database config), you can use the following
 snippet in your settings file, as high as possible in the file and immediately
 under the ``DJES_*`` settings definition:
 
-.. code-block:: python
+    .. code-block:: python
 
-    import etcd_settings.loader
-    extra_settings = etcd_settings.loader.get_overwrites(
-        DJES_ENV, DJES_DEV_PARAMS, DJES_ETCD_DETAILS)
-    locals().update(extra_settings)
+        import etcd_settings.loader
+        extra_settings = etcd_settings.loader.get_overwrites(
+            DJES_ENV, DJES_DEV_PARAMS, DJES_ETCD_DETAILS)
+        locals().update(extra_settings)
