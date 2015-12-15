@@ -160,9 +160,12 @@ class TestEtcdConfigManager(TestCase):
         self.assertEqual('{', exc.raw_value)
         self.assertIn("foo/bar", str(exc), "Expect key in message")
         self.assertIn(
-            "Expecting object",
-            str(exc), "Expect json error in message")
-        self.assertIn("'{'", str(exc), "Expect invalid value")
+            "Expecting", str(exc), msg="Expect detailed error message")
+        self.assertIn(
+            "line", str(exc), msg="Expect line number in error message")
+        self.assertIn(
+            "column", str(exc), msg="Expect column number in error message")
+        self.assertIn("'{'", str(exc), msg="Expect invalid value")
 
     def test_decode_config_value(self):
         self.assertEqual(

@@ -21,7 +21,7 @@ def attrs_to_dir(mod):
 def dict_rec_update(d, u):
     """Nested update of a dict, handy for overriding settings"""
     # https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
-    for k, v in u.iteritems():
+    for k, v in u.items():
         if isinstance(v, Mapping):
             r = dict_rec_update(d.get(k, {}), v)
             d[k] = r
@@ -53,7 +53,8 @@ class Task(Thread):
     def result(self):
         self.join()
         if self.__exc_info is not None:
-            raise self.__exc_info[0], self.__exc_info[1], self.__exc_info[2]
+            # raise(self.__exc_info[0], self.__exc_info[1], self.__exc_info[2])
+            raise self.__exc_info[1].with_traceback(self.__exc_info[2])
         else:
             return self._result
 
@@ -124,11 +125,10 @@ def copy_if_mutable(value):
 
 def byteify(input):
     if isinstance(input, dict):
-        return {byteify(key): byteify(value)
-                for key, value in input.iteritems()}
+        return {byteify(key): byteify(value) for key, value in input.items()}
     elif isinstance(input, list):
         return [byteify(element) for element in input]
-    elif isinstance(input, unicode):
+    elif (sys.version_info.major == 2) and (type(input) == type(u'unicode')):
         return input.encode('utf-8')
     else:
         return input

@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 A dynamic settings management solution for django using ETCD
-============================================
+============================================================
 
 Contents:
 
@@ -20,4 +20,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

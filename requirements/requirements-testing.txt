@@ -2,6 +2,7 @@ tox
 isort
 flake8
 mock==1.3.0
+py-pkgversion
 
 # PyTest for running the tests.
 pytest

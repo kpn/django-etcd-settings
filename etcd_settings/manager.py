@@ -154,7 +154,7 @@ class EtcdConfigManager():
                 yield res
             except Exception as e:
                 if not (isinstance(e, EtcdException)
-                        and ('timed out' in e.message)):
+                        and ('timed out' in str(e))):
                     self.logger.error("Long Polling Error: {}".format(e))
                     time.sleep(self.long_polling_safety_delay)
                 yield None
@@ -162,7 +162,7 @@ class EtcdConfigManager():
     def set_env_defaults(self, env, conf={}):
         path = self._env_defaults_path(env)
         errors = {}
-        for k, v in conf.iteritems():
+        for k, v in conf.items():
             if k.isupper():
                 try:
                     encoded_key = self._encode_config_key(k)
@@ -170,14 +170,14 @@ class EtcdConfigManager():
                         "{}/{}".format(path, encoded_key),
                         self._encode_config_value(v))
                 except Exception as e:
-                    errors[k] = e.message
+                    errors[k] = str(e)
         return errors
 
     def set_config_sets(self, config_sets={}):
         errors = {}
-        for set_name, config_set in config_sets.iteritems():
+        for set_name, config_set in config_sets.items():
             path = self._config_set_path(set_name)
-            for k, v in config_set.iteritems():
+            for k, v in config_set.items():
                 if k.isupper():
                     try:
                         self._client.write(
@@ -186,15 +186,3 @@ class EtcdConfigManager():
                     except Exception as e:
                         errors[k] = e.message
         return errors
-
-    def format_set_errors(self, errors={}, env_defaults=True):
-        output = []
-        if errors:
-            config_type = 'env defaults'
-            if not env_defaults:
-                config_type = 'dynamic config set'
-            output.append('Failed to load {} keys as {}:'.format(
-                len(errors), config_type))
-            for k, e in sorted(errors.iteritems()):
-                output.append("    {} : {}".format(k, e))
-        return '\n'.join(output)

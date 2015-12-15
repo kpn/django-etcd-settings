@@ -1,5 +1,11 @@
+etcd:
+  image: elcolio/etcd
+  ports:
+    - "2379:2379"
 app:
   build: .
   volumes:
     - .:/app
   command: make build
+  links:
+    - etcd

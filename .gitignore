@@ -168,5 +168,6 @@ Session.vim
 .netrwhist
 *~
 
-# SQLite db
+# Project files
 unittest.sqlite
+/setup.py
