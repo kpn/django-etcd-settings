@@ -1,6 +1,6 @@
 import os
-import sys
 import re
+import sys
 
 from django.http import HttpRequest
 from django.test import TestCase
