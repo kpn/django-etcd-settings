@@ -1,13 +1,13 @@
 import os
 import re
+
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.utils import override_settings
-from mock import MagicMock
 from etcd_settings.loader import get_overwrites
 from etcd_settings.manager import EtcdConfigManager
 from etcd_settings.proxy import EtcdSettingsProxy
-
+from mock import MagicMock
 
 ETCD_PREFIX = '/config/etcd_settings'
 ETCD_ENV = 'test'
