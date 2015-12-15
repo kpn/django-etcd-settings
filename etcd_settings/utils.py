@@ -128,7 +128,7 @@ def byteify(input):
         return {byteify(key): byteify(value) for key, value in input.items()}
     elif isinstance(input, list):
         return [byteify(element) for element in input]
-    elif type(input) == 'unicode':
+    elif (sys.version_info.major == 2) and (type(input) == type(u'unicode')):
         return input.encode('utf-8')
     else:
         return input

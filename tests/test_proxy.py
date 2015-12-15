@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 
 from django.http import HttpRequest
@@ -25,11 +26,17 @@ ETCD_DETAILS = dict(host=ETCD_HOST, port=ETCD_PORT, prefix=ETCD_PREFIX)
 class TestEtcdSettingsProxy(TestCase):
 
     def setUp(self):
+        s = ''
+        with open('tests/unicode.txt', 'rb+') as f:
+            if sys.version_info.major == 3:
+                s = f.read().decode()
+            else:
+                s = f.read()
         mgr = EtcdConfigManager(
             prefix=ETCD_PREFIX, host=ETCD_HOST, port=ETCD_PORT)
         self.env_config = {
             "A": 1, "B": "c", "D": {"e": "f"}, "E": 1,
-            "C": {'c2': 1}
+            "C": {'c2': 1}, 'ENCODING': s
         }
         mgr.set_env_defaults('test', self.env_config)
         mgr.set_config_sets({

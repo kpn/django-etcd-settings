@@ -170,7 +170,7 @@ class EtcdConfigManager():
                         "{}/{}".format(path, encoded_key),
                         self._encode_config_value(v))
                 except Exception as e:
-                    errors[k] = e.message
+                    errors[k] = str(e)
         return errors
 
     def set_config_sets(self, config_sets={}):
