@@ -21,7 +21,7 @@ def attrs_to_dir(mod):
 def dict_rec_update(d, u):
     """Nested update of a dict, handy for overriding settings"""
     # https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
-    for k, v in u.iteritems():
+    for k, v in u.items():
         if isinstance(v, Mapping):
             r = dict_rec_update(d.get(k, {}), v)
             d[k] = r

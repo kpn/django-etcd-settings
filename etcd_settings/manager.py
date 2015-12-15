@@ -162,7 +162,7 @@ class EtcdConfigManager():
     def set_env_defaults(self, env, conf={}):
         path = self._env_defaults_path(env)
         errors = {}
-        for k, v in conf.iteritems():
+        for k, v in conf.items():
             if k.isupper():
                 try:
                     encoded_key = self._encode_config_key(k)
@@ -175,9 +175,9 @@ class EtcdConfigManager():
 
     def set_config_sets(self, config_sets={}):
         errors = {}
-        for set_name, config_set in config_sets.iteritems():
+        for set_name, config_set in config_sets.items():
             path = self._config_set_path(set_name)
-            for k, v in config_set.iteritems():
+            for k, v in config_set.items():
                 if k.isupper():
                     try:
                         self._client.write(
@@ -186,15 +186,3 @@ class EtcdConfigManager():
                     except Exception as e:
                         errors[k] = e.message
         return errors
-
-    def format_set_errors(self, errors={}, env_defaults=True):
-        output = []
-        if errors:
-            config_type = 'env defaults'
-            if not env_defaults:
-                config_type = 'dynamic config set'
-            output.append('Failed to load {} keys as {}:'.format(
-                len(errors), config_type))
-            for k, e in sorted(errors.iteritems()):
-                output.append("    {} : {}".format(k, e))
-        return '\n'.join(output)

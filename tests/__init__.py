@@ -11,6 +11,7 @@ settings.configure(
         },
     },
     MIDDLEWARE_CLASSES=global_settings.MIDDLEWARE_CLASSES,
+    ROOT_URLCONF=None,
     INSTALLED_APPS=['etcd_settings'],
     DJES_DEV_PARAMS=None,
     DJES_REQUEST_GETTER=None,
