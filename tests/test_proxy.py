@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import sys
@@ -32,14 +33,14 @@ class TestEtcdSettingsProxy(TestCase):
                 s = f.read().decode()
             else:
                 s = f.read()
-        mgr = EtcdConfigManager(
+        self.mgr = EtcdConfigManager(
             prefix=ETCD_PREFIX, host=ETCD_HOST, port=ETCD_PORT)
         self.env_config = {
             "A": 1, "B": "c", "D": {"e": "f"}, "E": 1,
             "C": {'c2': 1}, 'ENCODING': s
         }
-        mgr.set_env_defaults('test', self.env_config)
-        mgr.set_config_sets({
+        self.mgr.set_env_defaults('test', self.env_config)
+        self.mgr.set_config_sets({
             'foo': {'A': 11},
             'bar': {'C': {'c3': 2}}})
         self.proxy = EtcdSettingsProxy()
@@ -51,6 +52,19 @@ class TestEtcdSettingsProxy(TestCase):
             os.remove('manage.py')
         except:
             pass
+
+    def test_proxy_starts_without_extensions(self):
+        self.mgr._client.delete(self.mgr._base_config_set_path, recursive=True)
+        p = EtcdSettingsProxy()
+        self.assertIsNotNone(p)
+
+    def test_proxy_starts_when_extensions_is_not_a_dir(self):
+        self.mgr._client.delete(self.mgr._base_config_set_path, recursive=True)
+        self.mgr._client.write(
+            self.mgr._base_config_set_path,
+            json.dumps('not_a_dict'))
+        p = EtcdSettingsProxy()
+        self.assertIsNotNone(p)
 
     def test_proxy_reads_initial_blob(self):
         self.assertEquals(1, self.proxy.A)

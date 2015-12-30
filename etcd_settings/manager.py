@@ -5,7 +5,7 @@ import time
 from importlib import import_module
 from os import utime
 
-from etcd import Client, EtcdException
+from etcd import Client, EtcdException, EtcdKeyNotFound
 
 from .utils import (
     CustomJSONEncoder, attrs_to_dir, byteify, custom_json_decoder_hook,
@@ -75,20 +75,28 @@ class EtcdConfigManager():
     def _process_response_set(self, rset, env_defaults=True):
         d = {}
         for leaf in rset.leaves:
-            config_set, key = self._decode_config_key(leaf.key)
-            if leaf.value is not None:
-                try:
-                    value = self._decode_config_value(leaf.value)
-                except ValueError as e:
-                    raise EtcdConfigInvalidValueError(
-                        leaf.key, leaf.value, e)
+            try:
+                config_set, key = self._decode_config_key(leaf.key)
+            except ValueError:
+                info = "An error occurred when processing an EtcdResponse"
+                if not env_defaults:
+                    info += " (is '{}' a directory?)".format(
+                        self._base_config_set_path)
+                self.logger.warning(info)
+            else:
+                if leaf.value is not None:
+                    try:
+                        value = self._decode_config_value(leaf.value)
+                    except ValueError as e:
+                        raise EtcdConfigInvalidValueError(
+                            leaf.key, leaf.value, e)
 
-                if env_defaults:
-                    d[key] = value
-                else:
-                    if config_set not in d:
-                        d[config_set] = {}
-                    d[config_set][key] = value
+                    if env_defaults:
+                        d[key] = value
+                    else:
+                        if config_set not in d:
+                            d[config_set] = {}
+                        d[config_set][key] = value
         return d
 
     @staticmethod
@@ -107,10 +115,16 @@ class EtcdConfigManager():
         return conf
 
     def get_config_sets(self):
-        res = self._client.read(
-            self._base_config_set_path,
-            recursive=True)
-        conf = self._process_response_set(res, env_defaults=False)
+        conf = {}
+        try:
+            res = self._client.read(
+                self._base_config_set_path,
+                recursive=True)
+            conf = self._process_response_set(res, env_defaults=False)
+        except EtcdKeyNotFound:
+            self.logger.warning(
+                "Unable to find config sets at '{}' (expected a dict)",
+                self._base_config_set_path)
         return conf
 
     @threaded(daemon=True)
@@ -184,5 +198,5 @@ class EtcdConfigManager():
                             "{}/{}".format(path, self._encode_config_key(k)),
                             self._encode_config_value(v))
                     except Exception as e:
-                        errors[k] = e.message
+                        errors[k] = str(e)
         return errors
