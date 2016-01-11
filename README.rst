@@ -40,7 +40,7 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install py-timeexecution
+    $ pip install django-etcd-settings
 
 
 Usage
