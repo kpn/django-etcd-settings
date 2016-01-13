@@ -24,7 +24,6 @@ class EtcdConfigInvalidValueError(Exception):
 
 
 class EtcdConfigManager():
-
     def __init__(
             self, dev_params=None, prefix='config', protocol='http',
             host='localhost', port=2379, username=None, password=None,
@@ -36,7 +35,7 @@ class EtcdConfigManager():
         self._client.http.connection_pool_kw['retries'] = 0
         self._base_config_path = prefix
         self._dev_params = dev_params
-        self._base_config_set_path = "{}/extensions"\
+        self._base_config_set_path = "{}/extensions" \
             .format(self._base_config_path)
         r = ('^(?P<path>{}/(?:extensions/)?'
              '(?P<envorset>[\w\-\.]+))/(?P<key>.+)$')
