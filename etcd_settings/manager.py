@@ -24,18 +24,18 @@ class EtcdConfigInvalidValueError(Exception):
 
 
 class EtcdConfigManager():
-
     def __init__(
             self, dev_params=None, prefix='config', protocol='http',
-            host='localhost', port=2379, long_polling_timeout=50,
-            long_polling_safety_delay=5):
+            host='localhost', port=2379, username=None, password=None,
+            long_polling_timeout=50, long_polling_safety_delay=5):
         self._client = Client(
-            host=host, port=port, protocol=protocol, allow_redirect=True)
+            host=host, port=port, protocol=protocol, allow_redirect=True,
+            username=username, password=password)
         # Overriding retries for urllib3.PoolManager.connection_pool_kw
         self._client.http.connection_pool_kw['retries'] = 0
         self._base_config_path = prefix
         self._dev_params = dev_params
-        self._base_config_set_path = "{}/extensions"\
+        self._base_config_set_path = "{}/extensions" \
             .format(self._base_config_path)
         r = ('^(?P<path>{}/(?:extensions/)?'
              '(?P<envorset>[\w\-\.]+))/(?P<key>.+)$')

@@ -15,7 +15,15 @@ ETCD_PREFIX = '/config/etcd_settings'
 ETCD_ENV = 'test'
 ETCD_HOST = 'etcd'
 ETCD_PORT = 2379
-ETCD_DETAILS = dict(host=ETCD_HOST, port=ETCD_PORT, prefix=ETCD_PREFIX)
+ETCD_USERNAME = 'test'
+ETCD_PASSWORD = 'test'
+ETCD_DETAILS = dict(
+    host=ETCD_HOST,
+    port=ETCD_PORT,
+    prefix=ETCD_PREFIX,
+    username=ETCD_USERNAME,
+    password=ETCD_PASSWORD
+)
 
 
 @override_settings(
@@ -34,7 +42,10 @@ class TestEtcdSettingsProxy(TestCase):
             else:
                 s = f.read()
         self.mgr = EtcdConfigManager(
-            prefix=ETCD_PREFIX, host=ETCD_HOST, port=ETCD_PORT)
+            prefix=ETCD_PREFIX, host=ETCD_HOST, port=ETCD_PORT,
+            username=ETCD_USERNAME, password=ETCD_PASSWORD
+        )
+
         self.env_config = {
             "A": 1, "B": "c", "D": {"e": "f"}, "E": 1,
             "C": {'c2': 1}, 'ENCODING': s
@@ -52,6 +63,10 @@ class TestEtcdSettingsProxy(TestCase):
             os.remove('manage.py')
         except:
             pass
+
+    def test_username_password(self):
+        self.assertEquals({'authorization': u'Basic dGVzdDp0ZXN0'},
+                          self.mgr._client._get_headers())
 
     def test_proxy_starts_without_extensions(self):
         self.mgr._client.delete(self.mgr._base_config_set_path, recursive=True)
