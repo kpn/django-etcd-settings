@@ -60,6 +60,7 @@ This Django application uses the following configuration keys:
     etcd_settings.settings will resolve to django.conf.settings plus your
     DJES_DEV_PARAMS overwrites
     i.e.
+
     .. code-block:: python
 
         ETCD_DETAILS = dict(
