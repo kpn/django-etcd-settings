@@ -59,6 +59,7 @@ docker/%:
 
 setup.py: venv
 	$(PYTHON) setup_gen.py
+	$(PYTHON) setup.py check --restructuredtext
 
 publish: setup.py
 	$(PYTHON) setup.py sdist upload
