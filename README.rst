@@ -25,7 +25,7 @@ This application allows you to extend the Django settings as configured in the
   a 'per request' basis using the ``X-DYNAMIC-SETTINGS`` HTTP header
 
 Both the added configuration values and config sets would live at ETCD, which
-will be continuously monitores by this library in order to transparently update
+will be continuously monitored by this library in order to transparently update
 your app settings upon changes.
 
 
