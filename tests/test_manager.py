@@ -217,7 +217,7 @@ class TestEtcdConfigManager(TestCase):
         self.assertEqual(99, self.mgr._etcd_index)
         self.mgr._client.watch.assert_called_with(
             self.mgr._env_defaults_path(env),
-            index=old_etcd_index,
+            index=old_etcd_index + 1,
             recursive=True,
             timeout=50)
 
@@ -232,7 +232,7 @@ class TestEtcdConfigManager(TestCase):
         self.assertEqual(99, self.mgr._etcd_index)
         self.mgr._client.watch.assert_called_with(
             self.mgr._base_config_set_path,
-            index=old_etcd_index,
+            index=old_etcd_index + 1,
             recursive=True,
             timeout=50)
 
