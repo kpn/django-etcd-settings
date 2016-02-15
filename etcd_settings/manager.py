@@ -162,7 +162,7 @@ class EtcdConfigManager():
                 i += 1
                 res = self._client.watch(
                     path,
-                    index=self._etcd_index,
+                    index=self._etcd_index + 1,
                     recursive=True,
                     timeout=self.long_polling_timeout)
                 yield res
