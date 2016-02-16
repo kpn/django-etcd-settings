@@ -160,9 +160,12 @@ class EtcdConfigManager():
         while (max_events is None) or (i < max_events):
             try:
                 i += 1
+                index = self._etcd_index
+                if index > 0:
+                    index = index + 1
                 res = self._client.watch(
                     path,
-                    index=self._etcd_index + 1,
+                    index=index,
                     recursive=True,
                     timeout=self.long_polling_timeout)
                 yield res
