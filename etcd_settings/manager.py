@@ -163,11 +163,13 @@ class EtcdConfigManager():
                 index = self._etcd_index
                 if index > 0:
                     index = index + 1
-                res = self._client.watch(
-                    path,
-                    index=index,
-                    recursive=True,
-                    timeout=self.long_polling_timeout)
+                    res = self._client.watch(
+                        path,
+                        index=index,
+                        recursive=True,
+                        timeout=self.long_polling_timeout)
+                else:
+                    res = self._client.read(path, recursive=True)
                 yield res
             except Exception as e:
                 if not (isinstance(e, EtcdException)
