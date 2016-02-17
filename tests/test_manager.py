@@ -1,110 +1,101 @@
 import datetime
 import json
 import logging
+import os
 import time
 
 from django.test import TestCase
-from etcd import EtcdException, EtcdResult
+from etcd import EtcdKeyNotFound
 from etcd_settings.manager import (
     EtcdConfigInvalidValueError, EtcdConfigManager,
 )
-from mock import MagicMock
 
-
-class EtcdResultGenerator():
-
-    @staticmethod
-    def key(name, value):
-        d = dict(
-            key=name,
-            value=value,
-            expiration=None,
-            ttl=None,
-            modifiedIndex=5,
-            createdIndex=1,
-            newKey=False,
-            dir=False,
-        )
-        return d
-
-    @staticmethod
-    def result_set(dirname, keys):
-        dir_keys = keys
-        for k in dir_keys:
-            key_name = k['key']
-            k['key'] = '{}{}'.format(dirname, key_name)
-        d = dict(node=dict(
-            key=dirname,
-            expiration=None,
-            ttl=None,
-            modifiedIndex=6,
-            createdIndex=2,
-            newKey=False,
-            dir=True,
-            nodes=dir_keys
-        ))
-        res = EtcdResult(**d)
-        res.etcd_index = 99
-        return res
+from .conftest import settings
 
 
 class TestEtcdConfigManager(TestCase):
     longMessage = True
 
-    def _dataset_for_with_empty_dir(self, env):
-        expected = {
-        }
-        keys = [EtcdResultGenerator.key('/foo/bar', None)]
-        rset = EtcdResultGenerator.result_set(
-            self.mgr._env_defaults_path(env),
-            keys)
-        return expected, rset
+    def _dataset_with_empty_dir(self):
+        key = os.path.join(self.mgr._env_defaults_path(self.env), 'dir/empty')
+        self.mgr._client.write(key, None, dir=True)
+        value = self.mgr._client.get(key)
+        return key, value
 
-    def _dataset_for_with_invalid_json(self, env):
-        keys = [EtcdResultGenerator.key('/foo/bar', '{')]
-        rset = EtcdResultGenerator.result_set(
-            self.mgr._env_defaults_path(env),
-            keys)
-        return rset
+    def _dataset_with_invalid_json(self):
+        key = os.path.join(
+            self.mgr._env_defaults_path(self.env), 'json/invalid')
+        self.mgr._client.set(key, '{')
+        value = self.mgr._client.get(key)
+        return key, value
 
-    def _dataset_for_defaults(self, env):
-        expected = {
+    def _dataset_for_defaults(self):
+        dataset = {}
+        k1 = os.path.join(self.mgr._env_defaults_path(self.env), 'foo/bar')
+        dataset[k1] = '"baz"'
+        k2 = os.path.join(self.mgr._env_defaults_path(self.env), 'foo/baz')
+        dataset[k2] = '"bar"'
+        k3 = os.path.join(self.mgr._env_defaults_path(self.env), 'foobarbaz')
+        dataset[k3] = '"superbaz"'
+        expected_env = {
             'FOO_BAR': 'baz',
             'FOO_BAZ': 'bar',
             'FOOBARBAZ': 'superbaz',
         }
-        keys = [EtcdResultGenerator.key('/foo/bar', '"baz"'),
-                EtcdResultGenerator.key('/foo/baz', '"bar"'),
-                EtcdResultGenerator.key('/foobarbaz', '"superbaz"')]
-        rset = EtcdResultGenerator.result_set(
-            self.mgr._env_defaults_path(env),
-            keys)
-        return expected, rset
+        for k, v in dataset.items():
+            self.mgr._client.set(k, v)
+        return dataset.keys(), expected_env
 
     def _dataset_for_configsets(self):
-        expected = {
+        dataset = {}
+        k1 = os.path.join(self.mgr._config_set_path('foo'), 'bar')
+        dataset[k1] = '1'
+        k2 = os.path.join(self.mgr._config_set_path('foo'), 'baz')
+        dataset[k2] = '2'
+        k3 = os.path.join(self.mgr._config_set_path('foo.bar'), 'baz')
+        dataset[k3] = '1'
+        k4 = os.path.join(self.mgr._config_set_path('foo.bar'), 'bazbaz')
+        dataset[k4] = '2'
+        k5 = os.path.join(self.mgr._config_set_path('foo.bar-zoo'), 'bar')
+        dataset[k5] = '1'
+        expected_sets = {
             'foo': {'BAR': 1, 'BAZ': 2},
             'foo.bar': {'BAZ': 1, 'BAZBAZ': 2},
             'foo.bar-zoo': {'BAR': 1},
         }
-        keys = [EtcdResultGenerator.key('/foo/bar', '1'),
-                EtcdResultGenerator.key('/foo/baz', '2'),
-                EtcdResultGenerator.key('/foo.bar/baz', '1'),
-                EtcdResultGenerator.key('/foo.bar/bazbaz', '2'),
-                EtcdResultGenerator.key('/foo.bar-zoo/bar', '1')]
-        rset = EtcdResultGenerator.result_set(
-            self.mgr._base_config_set_path,
-            keys)
-        return expected, rset
+        for k, v in dataset.items():
+            self.mgr._client.set(k, v)
+        return dataset.keys(), expected_sets
 
     def setUp(self):
+
+        self.env = 'unittest'
         self.mgr = EtcdConfigManager(
-            dev_params=None, prefix='prefix',
-            protocol='foo', host='foo', port=0,
-            long_polling_timeout=50,
-            long_polling_safety_delay=0.1)
+            dev_params=None, prefix=settings.ETCD_PREFIX, protocol='http',
+            host=settings.ETCD_HOST, port=settings.ETCD_PORT,
+            username=settings.ETCD_USERNAME, password=settings.ETCD_PASSWORD,
+            long_polling_timeout=0.1, long_polling_safety_delay=0.1
+        )
         for l in self.mgr.logger.handlers:
             l.setLevel(logging.CRITICAL)
+
+    def tearDown(self):
+        def try_unless_not_found(f):
+            try:
+                f()
+            except EtcdKeyNotFound:
+                pass
+
+        def clean_env():
+            self.mgr._client.delete(
+                self.mgr._env_defaults_path(self.env), recursive=True)
+
+        def clean_extensions():
+            self.mgr._client.delete(
+                self.mgr._base_config_set_path, recursive=True)
+
+        try_unless_not_found(clean_extensions)
+        try_unless_not_found(clean_env)
 
     def test_init_logger(self):
         self.assertIsNotNone(self.mgr.logger)
@@ -116,9 +107,8 @@ class TestEtcdConfigManager(TestCase):
 
     def test_decode_env_config_key(self):
         key = 'FOO_BAR'
-        env = 'test'
-        s = '{}/{}/foo/bar'.format(self.mgr._base_config_path, env)
-        self.assertEqual((env, key), self.mgr._decode_config_key(s))
+        s = '{}/{}/foo/bar'.format(self.mgr._base_config_path, self.env)
+        self.assertEqual((self.env, key), self.mgr._decode_config_key(s))
 
     def test_decode_set_config_key(self):
         key = 'FOO_BAR'
@@ -143,29 +133,26 @@ class TestEtcdConfigManager(TestCase):
             json.loads(encoded_config))
 
     def test_process_response_set_empty(self):
-        env = 'test'
-        expected_rs, input_rs = self._dataset_for_with_empty_dir(env)
-
-        self.assertEqual(expected_rs, self.mgr._process_response_set(input_rs))
+        key, value = self._dataset_with_empty_dir()
+        self.assertEqual({}, self.mgr._process_response_set(value))
 
     def test_process_response_exception_handling(self):
-        env = 'test'
         with self.assertRaises(EtcdConfigInvalidValueError) as excContext:
-            input_rs = self._dataset_for_with_invalid_json(env)
-            self.mgr._process_response_set(input_rs)
+            key, value = self._dataset_with_invalid_json()
+            self.mgr._process_response_set(value)
 
         exc = excContext.exception
 
-        self.assertEqual('prefix/test/foo/bar', exc.key)
-        self.assertEqual('{', exc.raw_value)
-        self.assertIn("foo/bar", str(exc), "Expect key in message")
+        self.assertEqual(key, exc.key)
+        self.assertEqual(value.value, exc.raw_value)
+        self.assertIn(key, str(exc), "Expect key in message")
         self.assertIn(
             "Expecting", str(exc), msg="Expect detailed error message")
         self.assertIn(
             "line", str(exc), msg="Expect line number in error message")
         self.assertIn(
             "column", str(exc), msg="Expect column number in error message")
-        self.assertIn("'{'", str(exc), msg="Expect invalid value")
+        self.assertIn(value.value, str(exc), msg="Expect invalid value")
 
     def test_decode_config_value(self):
         self.assertEqual(
@@ -190,92 +177,82 @@ class TestEtcdConfigManager(TestCase):
         self.assertEqual(d, decoded_d)
 
     def test_get_env_defaults(self):
-        env = 'test'
-        expected, rset = self._dataset_for_defaults(env)
-        env_path = self.mgr._env_defaults_path(env)
-        self.mgr._client.read = MagicMock(return_value=rset)
-        self.assertEqual(expected, self.mgr.get_env_defaults('test'))
-        self.mgr._client.read.assert_called_with(env_path, recursive=True)
+        keys, expected = self._dataset_for_defaults()
+        self.assertEqual(expected, self.mgr.get_env_defaults(self.env))
 
     def test_get_config_sets(self):
-        expected, rset = self._dataset_for_configsets()
-        self.mgr._client.read = MagicMock(return_value=rset)
-        self.assertEqual(expected, self.mgr.get_config_sets())
-        self.mgr._client.read.assert_called_with(
-            self.mgr._base_config_set_path,
-            recursive=True)
+        keys, expected_sets = self._dataset_for_configsets()
+        self.assertEqual(expected_sets, self.mgr.get_config_sets())
 
     def test_monitor_env_defaults(self):
-        env = 'test'
-        expected, rset = self._dataset_for_defaults(env)
+        keys, expected_env = self._dataset_for_defaults()
         d = {}
-        self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
-        t = self.mgr.monitor_env_defaults(env=env, conf=d, max_events=1)
+        t = self.mgr.monitor_env_defaults(env=self.env, conf=d, max_events=1)
         self.assertEqual(1, t.result)
-        self.assertEqual(expected, d)
-        self.assertEqual(99, self.mgr._etcd_index)
-        self.mgr._client.watch.assert_called_with(
-            self.mgr._env_defaults_path(env),
-            index=old_etcd_index,
-            recursive=True,
-            timeout=50)
+        self.assertEqual(expected_env, d)
+        self.assertGreater(self.mgr._etcd_index, old_etcd_index)
 
     def test_monitor_config_sets(self):
-        expected, rset = self._dataset_for_configsets()
+        keys, expected_sets = self._dataset_for_configsets()
         d = {}
-        self.mgr._client.watch = MagicMock(return_value=rset)
         old_etcd_index = self.mgr._etcd_index
         t = self.mgr.monitor_config_sets(conf=d, max_events=1)
         self.assertEqual(1, t.result)
-        self.assertEqual(expected, d)
-        self.assertEqual(99, self.mgr._etcd_index)
-        self.mgr._client.watch.assert_called_with(
-            self.mgr._base_config_set_path,
-            index=old_etcd_index,
-            recursive=True,
-            timeout=50)
+        self.assertEqual(expected_sets, d)
+        self.assertGreater(self.mgr._etcd_index, old_etcd_index)
 
     def test_monitors_delay_and_continue_on_exception(self):
-        env = 'test'
         d = {}
         max_events = 2
         lambdas = [
             lambda: self.mgr.monitor_env_defaults(
-                env, conf=d, max_events=max_events),
+                self.env, conf=d, max_events=max_events),
             lambda: self.mgr.monitor_config_sets(
                 conf=d, max_events=max_events),
         ]
-        for l in lambdas:
-            t0 = time.time()
-            t = l()
-            self.assertEqual(max_events, t.result)
-            self.assertEqual(
-                True,
-                (time.time() - t0)
-                > (max_events * self.mgr.long_polling_safety_delay)
-            )
-            self.assertEqual(False, t.is_alive())
+        try:
+            self.mgr._base_config_path = 'Unknown'
+            for l in lambdas:
+                t0 = time.time()
+                t = l()
+                self.assertEqual(max_events, t.result)
+                self.assertEqual(
+                    True,
+                    (time.time() - t0)
+                    > (max_events * self.mgr.long_polling_safety_delay)
+                )
+                self.assertEqual(False, t.is_alive())
+        finally:
+            self.mgr._base_config_path = settings.ETCD_PREFIX
 
     def test_monitors_continue_on_etcd_exception(self):
-        env = 'test'
         d = {}
         max_events = 2
-        self.mgr._client.watch = MagicMock(
-            side_effect=EtcdException('timed out'))
         lambdas = [
             lambda: self.mgr.monitor_env_defaults(
-                env, conf=d, max_events=max_events),
+                self.env, conf=d, max_events=max_events),
             lambda: self.mgr.monitor_config_sets(
                 conf=d, max_events=max_events),
         ]
-        for l in lambdas:
-            t0 = time.time()
-            t = l()
-            self.assertEqual(max_events, t.result)
-            self.assertEqual(
-                True,
-                (time.time() - t0)
-                < (max_events * self.mgr.long_polling_safety_delay)
-            )
-            self.assertEqual(False, t.is_alive())
+        try:
+            old_etcd_index = self.mgr._etcd_index
+            self.mgr._etcd_index = 999990
+            for l in lambdas:
+                t0 = time.time()
+                t = l()
+                self.assertEqual(max_events, t.result)
+                net_time = time.time() - t0
+                self.assertGreater(
+                    net_time,
+                    (max_events * self.mgr.long_polling_timeout)
+                )
+                self.assertLess(
+                    net_time,
+                    (max_events *
+                        (self.mgr.long_polling_safety_delay
+                            + self.mgr.long_polling_timeout))
+                )
+                self.assertEqual(False, t.is_alive())
+        finally:
+            self.mgr._etcd_index = old_etcd_index
