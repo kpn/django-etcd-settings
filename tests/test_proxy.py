@@ -7,28 +7,16 @@ from django.http import HttpRequest
 from django.test import TestCase
 from django.test.utils import override_settings
 from etcd_settings.loader import get_overwrites
-from etcd_settings.manager import EtcdConfigManager
+from etcd_settings.manager import EtcdClusterState, EtcdConfigManager
 from etcd_settings.proxy import EtcdSettingsProxy
 from mock import MagicMock
 
-ETCD_PREFIX = '/config/etcd_settings'
-ETCD_ENV = 'test'
-ETCD_HOST = 'etcd'
-ETCD_PORT = 2379
-ETCD_USERNAME = 'test'
-ETCD_PASSWORD = 'test'
-ETCD_DETAILS = dict(
-    host=ETCD_HOST,
-    port=ETCD_PORT,
-    prefix=ETCD_PREFIX,
-    username=ETCD_USERNAME,
-    password=ETCD_PASSWORD
-)
+from .conftest import settings
 
 
 @override_settings(
-    DJES_ETCD_DETAILS=ETCD_DETAILS,
-    DJES_ENV=ETCD_ENV,
+    DJES_ETCD_DETAILS=settings.ETCD_DETAILS,
+    DJES_ENV=settings.ETCD_ENV,
     DJES_REQUEST_GETTER='etcd_settings.utils.threaded',
     E=0
 )
@@ -42,8 +30,9 @@ class TestEtcdSettingsProxy(TestCase):
             else:
                 s = f.read()
         self.mgr = EtcdConfigManager(
-            prefix=ETCD_PREFIX, host=ETCD_HOST, port=ETCD_PORT,
-            username=ETCD_USERNAME, password=ETCD_PASSWORD
+            prefix=settings.ETCD_PREFIX, host=settings.ETCD_HOST,
+            port=settings.ETCD_PORT,
+            username=settings.ETCD_USERNAME, password=settings.ETCD_PASSWORD
         )
 
         self.env_config = {
@@ -63,6 +52,11 @@ class TestEtcdSettingsProxy(TestCase):
             os.remove('manage.py')
         except:
             pass
+
+    def test_loader_etcd_index_in_manager(self):
+        env = get_overwrites(settings.ETCD_ENV, None, settings.ETCD_DETAILS)
+        self.assertIsNotNone(env)
+        self.assertGreater(EtcdClusterState.etcd_index, 0)
 
     def test_username_password(self):
         self.assertEquals({'authorization': u'Basic dGVzdDp0ZXN0'},
@@ -129,5 +123,5 @@ class TestEtcdSettingsProxy(TestCase):
     def test_loader_gets_overwrites(self):
         self.assertEqual(
             self.env_config,
-            get_overwrites(ETCD_ENV, None, ETCD_DETAILS)
+            get_overwrites(settings.ETCD_ENV, None, settings.ETCD_DETAILS)
         )

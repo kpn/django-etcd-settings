@@ -21,8 +21,7 @@ class EtcdSettingsProxy(object):
         self._locate_wsgi_file(
             getattr(django_settings, 'DJES_WSGI_FILE', None))
         if etcd_details is not None:
-            self._etcd_mgr = EtcdConfigManager(
-                dev_params, **etcd_details)
+            self._etcd_mgr = EtcdConfigManager(dev_params, **etcd_details)
             self._config_sets = self._etcd_mgr.get_config_sets()
             self._env_defaults = self._etcd_mgr.get_env_defaults(self.env)
         else:

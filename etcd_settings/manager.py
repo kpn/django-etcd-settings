@@ -23,6 +23,11 @@ class EtcdConfigInvalidValueError(Exception):
             .format(key, value_error, raw_value))
 
 
+class EtcdClusterState(object):
+
+    etcd_index = 0
+
+
 class EtcdConfigManager():
     def __init__(
             self, dev_params=None, prefix='config', protocol='http',
@@ -40,7 +45,6 @@ class EtcdConfigManager():
         r = ('^(?P<path>{}/(?:extensions/)?'
              '(?P<envorset>[\w\-\.]+))/(?P<key>.+)$')
         self._key_regex = re.compile(r.format(self._base_config_path))
-        self._etcd_index = 0
         self.long_polling_timeout = long_polling_timeout
         self.long_polling_safety_delay = long_polling_safety_delay
         self._init_logger()
@@ -74,6 +78,7 @@ class EtcdConfigManager():
 
     def _process_response_set(self, rset, env_defaults=True):
         d = {}
+        EtcdClusterState.etcd_index = rset.etcd_index
         for leaf in rset.leaves:
             try:
                 config_set, key = self._decode_config_key(leaf.key)
@@ -134,7 +139,6 @@ class EtcdConfigManager():
         for event in self._watch(
                 self._env_defaults_path(env), conf, wsgi_file, max_events):
             if event is not None:
-                self._etcd_index = event.etcd_index
                 conf.update(self._process_response_set(event))
                 conf.update(EtcdConfigManager.get_dev_params(self._dev_params))
                 if wsgi_file:
@@ -149,7 +153,6 @@ class EtcdConfigManager():
         for event in self._watch(
                 self._base_config_set_path, conf=conf, max_events=max_events):
             if event is not None:
-                self._etcd_index = event.etcd_index
                 conf.update(
                     self._process_response_set(event, env_defaults=False))
             processed_events += 1
@@ -160,14 +163,16 @@ class EtcdConfigManager():
         while (max_events is None) or (i < max_events):
             try:
                 i += 1
-                index = self._etcd_index
+                index = EtcdClusterState.etcd_index
                 if index > 0:
                     index = index + 1
-                res = self._client.watch(
-                    path,
-                    index=index,
-                    recursive=True,
-                    timeout=self.long_polling_timeout)
+                    res = self._client.watch(
+                        path,
+                        index=index,
+                        recursive=True,
+                        timeout=self.long_polling_timeout)
+                else:
+                    res = self._client.read(path, recursive=True)
                 yield res
             except Exception as e:
                 if not (isinstance(e, EtcdException)
