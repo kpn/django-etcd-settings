@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from django.test import TestCase
 from django.test.utils import override_settings
 from etcd_settings.loader import get_overwrites
-from etcd_settings.manager import EtcdConfigManager
+from etcd_settings.manager import EtcdClusterState, EtcdConfigManager
 from etcd_settings.proxy import EtcdSettingsProxy
 from mock import MagicMock
 
@@ -52,6 +52,11 @@ class TestEtcdSettingsProxy(TestCase):
             os.remove('manage.py')
         except:
             pass
+
+    def test_loader_etcd_index_in_manager(self):
+        env = get_overwrites(settings.ETCD_ENV, None, settings.ETCD_DETAILS)
+        self.assertIsNotNone(env)
+        self.assertGreater(EtcdClusterState.etcd_index, 0)
 
     def test_username_password(self):
         self.assertEquals({'authorization': u'Basic dGVzdDp0ZXN0'},

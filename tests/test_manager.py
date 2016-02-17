@@ -7,7 +7,7 @@ import time
 from django.test import TestCase
 from etcd import EtcdKeyNotFound
 from etcd_settings.manager import (
-    EtcdConfigInvalidValueError, EtcdConfigManager,
+    EtcdClusterState, EtcdConfigInvalidValueError, EtcdConfigManager,
 )
 
 from .conftest import settings
@@ -70,6 +70,7 @@ class TestEtcdConfigManager(TestCase):
     def setUp(self):
 
         self.env = 'unittest'
+        EtcdClusterState.etcd_index = 0
         self.mgr = EtcdConfigManager(
             dev_params=None, prefix=settings.ETCD_PREFIX, protocol='http',
             host=settings.ETCD_HOST, port=settings.ETCD_PORT,
@@ -187,20 +188,20 @@ class TestEtcdConfigManager(TestCase):
     def test_monitor_env_defaults(self):
         keys, expected_env = self._dataset_for_defaults()
         d = {}
-        old_etcd_index = self.mgr._etcd_index
+        old_etcd_index = EtcdClusterState.etcd_index
         t = self.mgr.monitor_env_defaults(env=self.env, conf=d, max_events=1)
         self.assertEqual(1, t.result)
         self.assertEqual(expected_env, d)
-        self.assertGreater(self.mgr._etcd_index, old_etcd_index)
+        self.assertGreater(EtcdClusterState.etcd_index, old_etcd_index)
 
     def test_monitor_config_sets(self):
         keys, expected_sets = self._dataset_for_configsets()
         d = {}
-        old_etcd_index = self.mgr._etcd_index
+        old_etcd_index = EtcdClusterState.etcd_index
         t = self.mgr.monitor_config_sets(conf=d, max_events=1)
         self.assertEqual(1, t.result)
         self.assertEqual(expected_sets, d)
-        self.assertGreater(self.mgr._etcd_index, old_etcd_index)
+        self.assertGreater(EtcdClusterState.etcd_index, old_etcd_index)
 
     def test_monitors_delay_and_continue_on_exception(self):
         d = {}
@@ -236,7 +237,7 @@ class TestEtcdConfigManager(TestCase):
                 conf=d, max_events=max_events),
         ]
         try:
-            old_etcd_index = self.mgr._etcd_index
+            old_etcd_index = EtcdClusterState.etcd_index
             self.mgr._etcd_index = 999990
             for l in lambdas:
                 t0 = time.time()
@@ -255,4 +256,4 @@ class TestEtcdConfigManager(TestCase):
                 )
                 self.assertEqual(False, t.is_alive())
         finally:
-            self.mgr._etcd_index = old_etcd_index
+            EtcdClusterState.etcd_index = old_etcd_index
