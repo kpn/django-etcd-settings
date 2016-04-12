@@ -24,11 +24,10 @@ class EtcdConfigInvalidValueError(Exception):
 
 
 class EtcdClusterState(object):
-
     etcd_index = 0
 
 
-class EtcdConfigManager():
+class EtcdConfigManager(object):
     def __init__(
             self, dev_params=None, prefix='config', protocol='http',
             host='localhost', port=2379, username=None, password=None,
