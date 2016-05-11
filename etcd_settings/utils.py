@@ -7,6 +7,7 @@ from collections import Mapping
 from functools import wraps
 from threading import Thread
 
+import six
 from dateutil.parser import parse as parse_date
 
 
@@ -53,10 +54,8 @@ class Task(Thread):
     def result(self):
         self.join()
         if self.__exc_info is not None:
-            # raise(self.__exc_info[0], self.__exc_info[1], self.__exc_info[2])
-            raise self.__exc_info[1].with_traceback(self.__exc_info[2])
-        else:
-            return self._result
+            six.reraise(*self.__exc_info)
+        return self._result
 
 
 def threaded(function=None, daemon=False):
