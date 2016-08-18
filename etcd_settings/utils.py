@@ -1,6 +1,7 @@
 import copy
 import datetime
 import json
+import logging
 import os
 import sys
 from collections import Mapping
@@ -131,3 +132,19 @@ def byteify(input):
         return input.encode('utf-8')
     else:
         return input
+
+
+class IgnoreMaxEtcdRetries(logging.Filter):
+    """
+    Skip etcd.client MaxRetryError on timeout
+    """
+
+    def __init__(self, name='etcd.client'):
+        super(IgnoreMaxEtcdRetries, self).__init__(name)
+
+    def filter(self, record):
+        msg = '{}'.format(record.args)
+        return not (
+            'MaxRetryError' in msg and
+            'Read timed out' in msg
+        )
