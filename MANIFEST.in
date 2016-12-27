@@ -1,5 +1,6 @@
 include README.md
 include VERSION
+include LICENSE
 
 recursive-include tests *
 recursive-exclude * __pycache__
