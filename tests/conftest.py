@@ -14,4 +14,5 @@ class TestSettings(object):
         password='test'
     )
 
+
 settings = TestSettings()
