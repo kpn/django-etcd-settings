@@ -9,7 +9,7 @@ write_setup_py(
     description="A dynamic settings management solution for Django using ETCD",
     long_description=open('README.rst').read(),
     author="Enrique Paz",
-    author_email='enrique.pazperez@kpn.com',
+    author_email='quiquepaz@gmail.com',
     url='https://github.com/kpn-digital/django-etcd-settings',
     install_requires=list_requirements('requirements/requirements-base.txt'),
     packages=find_packages(exclude=['tests*']),
