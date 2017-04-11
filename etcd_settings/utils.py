@@ -38,6 +38,7 @@ class Task(Thread):
     def __init__(self, method, *args, **kwargs):
         super(Task, self).__init__()
         self.method = method
+        self.name = 'DjangoETCDSettingsThread'
         self.args = args
         self.kwargs = kwargs
         self._result = None
