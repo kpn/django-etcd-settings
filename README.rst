@@ -88,7 +88,7 @@ This Django application uses the following configuration keys:
 
 * ``DJES_WSGI_FILE``: path to the ``wsgi.py`` file for the django
     project. If not None, the monitoring of environment configuration will
-    perform a ``touch`` of the file everytime the env_defaults are updated, so
+    perform a ``touch`` of the file every time the env_defaults are updated, so
     that all processes consuming settings from ``django.conf`` can consume the
     latest settings available as well
     The path can be absolute or relative to the 'manage.py' file.
