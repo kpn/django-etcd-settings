@@ -3,11 +3,10 @@ import re
 from importlib import import_module
 
 from django.conf import settings as django_settings
+from etcd_config.manager import EtcdConfigManager
+from etcd_config.utils import attrs_to_dir
 
-from .manager import EtcdConfigManager
-from .utils import (
-    attrs_to_dir, copy_if_mutable, dict_rec_update, find_project_root,
-)
+from .utils import copy_if_mutable, dict_rec_update, find_project_root
 
 
 class EtcdSettingsProxy(object):

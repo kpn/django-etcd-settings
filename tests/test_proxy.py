@@ -6,8 +6,8 @@ import sys
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.utils import override_settings
-from etcd_settings.loader import get_overwrites
-from etcd_settings.manager import EtcdClusterState, EtcdConfigManager
+from etcd_config.loader import get_overwrites
+from etcd_config.manager import EtcdClusterState, EtcdConfigManager
 from etcd_settings.proxy import EtcdSettingsProxy
 from mock import MagicMock
 
@@ -17,7 +17,7 @@ from .conftest import settings
 @override_settings(
     DJES_ETCD_DETAILS=settings.ETCD_DETAILS,
     DJES_ENV=settings.ETCD_ENV,
-    DJES_REQUEST_GETTER='etcd_settings.utils.threaded',
+    DJES_REQUEST_GETTER='etcd_config.utils.threaded',
     E=0
 )
 class TestEtcdSettingsProxy(TestCase):
