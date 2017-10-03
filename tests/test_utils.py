@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from etcd_settings import utils
+from etcd_config import utils
 
 
 class TestLoggingFilter(unittest.TestCase):
