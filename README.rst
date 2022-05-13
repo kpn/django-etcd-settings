@@ -14,6 +14,11 @@ Django ETCD Settings
     :target: http://django-etcd-settings.readthedocs.org/en/latest/?badge=latest
 
 
+NOT MAINTAINED
+--------------
+
+This repository is not actively maintained anymore.
+
 Features
 --------
 
